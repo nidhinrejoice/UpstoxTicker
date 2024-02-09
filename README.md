@@ -47,6 +47,7 @@ Upstox API Documentation
 **Contact**
 For any inquiries or issues, please open an issue in this repository or contact me @ nidhinrejoice@gmail.com.
 
+**App in Action** -> https://youtube.com/shorts/K1jWWgMqmkA
 
 
 
