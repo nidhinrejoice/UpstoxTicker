@@ -20,9 +20,10 @@ The portfolio information will be updated in real-time to reflect any changes.
 
 **Technologies Used**
 
-Android SDK
 Kotlin
-Upstox API 
+Jetpack Compose
+Clean Architecture 
+Android SDK
 
 **Contributing**
 
@@ -41,8 +42,9 @@ This project is licensed under the MIT License.
 **Acknowledgements**
 
 Upstox API Documentation
-Contact
-For any inquiries or issues, please open an issue in this repository or contact yourname.
+
+**Contact**
+For any inquiries or issues, please open an issue in this repository or contact me @ nidhinrejoice@gmail.com.
 
 
 
