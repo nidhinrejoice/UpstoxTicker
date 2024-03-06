@@ -1,6 +1,7 @@
 **Upstox Stock Portfolio App**
 
-This repository contains the source code for an application that integrates with the Upstox brokerage platform to provide users with information about their current stock portfolio.
+Welcome to the Upstox Stock Portfolio Android App repository! This app allows users to view their current stock portfolio by consuming the API of the Upstox brokerage platform. It is built in Kotlin language, utilizing technologies like Jetpack Compose and following the Clean Architecture principles.
+
 
 **Features**
 
@@ -20,9 +21,10 @@ The portfolio information will be updated in real-time to reflect any changes.
 
 **Technologies Used**
 
-Android SDK
 Kotlin
-Upstox API 
+Jetpack Compose
+Clean Architecture 
+Android SDK
 
 **Contributing**
 
@@ -41,9 +43,11 @@ This project is licensed under the MIT License.
 **Acknowledgements**
 
 Upstox API Documentation
-Contact
-For any inquiries or issues, please open an issue in this repository or contact yourname.
 
+**Contact**
+For any inquiries or issues, please open an issue in this repository or contact me @ nidhinrejoice@gmail.com.
+
+**App in Action** -> https://youtube.com/shorts/K1jWWgMqmkA
 
 
 
