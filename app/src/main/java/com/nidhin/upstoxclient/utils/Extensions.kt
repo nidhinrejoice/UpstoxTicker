@@ -1,5 +1,9 @@
 package com.nidhin.upstoxclient.utils
 
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.Currency
 
@@ -27,4 +31,9 @@ fun Double.formatCurrency(): String {
     val baseCurrency =  "₹"
     return baseCurrency + df.format(this)
 
+}
+
+fun JSONObject.convertToReqBody(): RequestBody {
+    return toString()
+        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 }

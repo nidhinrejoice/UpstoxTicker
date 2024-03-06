@@ -23,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.PortfolioScreen
+import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockAllocationsScreen
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockInfo
 import com.nidhin.upstoxclient.feature_portfolio.presentation.util.Screen
 import com.nidhin.upstoxclient.ui.theme.UpstoxClientTheme
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
             var showLogin by remember { mutableStateOf(false) }
             LaunchedEffect(key1 = false) {
 
+                viewModel.getUserHoldings()
                 viewModel.eventFlow.collect { event ->
                     when (event) {
                         is PortfolioViewModel.UiEvent.ShowToast -> {
@@ -94,8 +96,12 @@ class MainActivity : ComponentActivity() {
 
                             PortfolioScreen(navController = navController)
                         }
+                        composable(route = Screen.StockAllocation.route) {
+
+                            StockAllocationsScreen(navController = navController)
+                        }
                         composable(
-                            route = Screen.StockDetails.route + "?instrument_token={instrument_token}&symbol={symbol}&exchange={exchange}",
+                            route = Screen.StockDetails.route + "?instrument_token={instrument_token}&symbol={symbol}&exchange={exchange}&company_name={company_name}",
                             arguments = listOf(
                                 navArgument(name = "instrument_token") {
                                     type = NavType.StringType
@@ -108,20 +114,26 @@ class MainActivity : ComponentActivity() {
                                 navArgument(name = "symbol") {
                                     type = NavType.StringType
                                     defaultValue = ""
+                                },
+                                navArgument(name = "company_name") {
+                                    type = NavType.StringType
+                                    defaultValue = ""
                                 }
                             )
                         ) {
-                            val instrument_token = it.arguments?.getString("instrument_token") ?: ""
+                            val instrumentToken = it.arguments?.getString("instrument_token") ?: ""
                             val symbol = it.arguments?.getString("symbol") ?: ""
                             val exchange = it.arguments?.getString("exchange") ?: ""
-                            StockInfo(
-                                instrument_token, symbol, exchange
-                            )
+                            val companyName = it.arguments?.getString("company_name") ?: ""
+
+                            LaunchedEffect(key1 = false) {
+                                viewModel.getMarketOHLC(instrumentToken, symbol, exchange,companyName)
+                            }
+                            StockInfo(viewModel.state.value,viewModel)
                         }
                     }
                 }
             }
         }
     }
-
 }

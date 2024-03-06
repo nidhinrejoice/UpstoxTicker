@@ -2,6 +2,7 @@ package com.nidhin.upstoxclient.feature_portfolio.presentation.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -79,9 +80,11 @@ fun PortfolioScreen(
             state = rememberSwipeRefreshState(isRefreshing),
             onRefresh = { viewModel.getUserHoldings() },
         ) {
-            LazyColumn(modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
                 item {
                     Row(
                         modifier = Modifier.fillMaxSize(),
@@ -98,7 +101,7 @@ fun PortfolioScreen(
                 item {
                     ElevatedCard(
                         modifier = Modifier
-                            .fillMaxWidth() ,
+                            .fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
 
@@ -125,7 +128,12 @@ fun PortfolioScreen(
                                         style = MaterialTheme.typography.labelLarge
                                     )
                                 }
-                                Column(horizontalAlignment = Alignment.End) {
+                                Column(horizontalAlignment = Alignment.End,
+                                    modifier = Modifier.clickable {
+                                        navController.navigate(
+                                            (Screen.StockAllocation.route)
+                                        )
+                                    }) {
                                     Text(
                                         text = "Total Investment",
                                         color = MaterialTheme.colorScheme.onSurface,
@@ -224,7 +232,10 @@ fun PortfolioScreen(
                     }
                 }
                 item {
-                    GainersAndLosers(gainersCount = dailyGainersCount, losersCount = dailyLosersCount)
+                    GainersAndLosers(
+                        gainersCount = dailyGainersCount,
+                        losersCount = dailyLosersCount
+                    )
                 }
 
                 items(state.stocks, key = {
@@ -237,7 +248,7 @@ fun PortfolioScreen(
                                     "&",
                                     "%26"
                                 )
-                            }&exchange=${stock.exchange}")
+                            }&exchange=${stock.exchange}&company_name=${stock.company_name}")
                         )
                     }
                 }

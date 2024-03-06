@@ -1,9 +1,8 @@
 package com.nidhin.upstoxclient.feature_portfolio.domain
 
-import com.nidhin.upstoxclient.feature_portfolio.data.models.StockDetails
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
-import com.nidhin.upstoxclient.feature_portfolio.presentation.PortfolioViewModel
 import javax.inject.Inject
 
 class GetLongTermHoldings @Inject constructor(

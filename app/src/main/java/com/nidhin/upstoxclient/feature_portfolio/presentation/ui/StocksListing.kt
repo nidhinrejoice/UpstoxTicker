@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.nidhin.upstoxclient.feature_portfolio.data.models.StockDetails
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
 import com.nidhin.upstoxclient.ui.theme.Green
 import com.nidhin.upstoxclient.utils.formatCurrency
@@ -33,43 +33,6 @@ fun StocksListing(
             .clickable { onStockClicked(it) },
         verticalAlignment = Alignment.CenterVertically
     ) {
-//                                            Box(
-//                                                modifier = Modifier
-//                                                    .weight(0.1f)
-//                                                    .clickable { },
-//                                                contentAlignment = Alignment.Center
-//                                            ) {
-//                                                val sweepAngle =
-//                                                    ((investedAmount - it.invested_amount) / investedAmount) * 360f
-//                                                val sweepAngleTwo =
-//                                                    ((it.invested_amount) / investedAmount) * 360f
-//                                                Canvas(modifier = Modifier.fillMaxSize().background(Color.DarkGray)) {
-//                                                    drawArc(
-//                                                        color = Color(
-//                                                            ColorUtils.blendARGB(
-//                                                                android.graphics.Green,
-//                                                                android.graphics.Color.BLACK,
-//                                                                0.6f
-//                                                            )
-//                                                        ),
-//                                                        startAngle = 0f,
-//                                                        sweepAngle = 360f,
-//                                                        useCenter = true,
-//                                                        size = Size(60f, 60f)
-//                                                    )
-//                                                    drawArc(
-//                                                        color = Green,
-//                                                        startAngle = 270f,
-//                                                        sweepAngle = sweepAngleTwo.toFloat(),
-//                                                        useCenter = true,
-//                                                        size = Size(60f, 60f)
-//                                                    )
-//                                                }
-////                                                Text(
-////                                                    text = "${(it.invested_amount / investedAmount * 100f).twoDecimalPlaces()}  %",
-////                                                    style = MaterialTheme.typography.bodySmall
-////                                                )
-//                                            }
         Box(
             modifier = Modifier
                 .weight(0.65f)

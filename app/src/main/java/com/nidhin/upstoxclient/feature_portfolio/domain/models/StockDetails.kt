@@ -1,4 +1,4 @@
-package com.nidhin.upstoxclient.feature_portfolio.data.models
+package com.nidhin.upstoxclient.feature_portfolio.domain.models
 
 import androidx.compose.runtime.Immutable
 import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.Ohlc

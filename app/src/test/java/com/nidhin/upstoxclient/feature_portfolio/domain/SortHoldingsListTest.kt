@@ -1,7 +1,7 @@
 package com.nidhin.upstoxclient.feature_portfolio.domain
 
 import com.google.common.truth.Truth.assertThat
-import com.nidhin.upstoxclient.feature_portfolio.data.models.StockDetails
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
 import kotlinx.coroutines.runBlocking

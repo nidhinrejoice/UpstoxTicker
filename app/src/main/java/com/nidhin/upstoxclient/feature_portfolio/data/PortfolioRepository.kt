@@ -1,20 +1,24 @@
 package com.nidhin.upstoxclient.feature_portfolio.data
 
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.gson.Gson
 import com.nidhin.upstoxclient.api.ApiManager
-import com.nidhin.upstoxclient.feature_portfolio.data.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.Ohlc
 import com.nidhin.upstoxclient.feature_portfolio.domain.IPortfolioRepository
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.persistance.SharedPrefsHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import java.util.Calendar
 import javax.inject.Inject
+import javax.inject.Named
 
 class PortfolioRepository @Inject constructor(
     private val sharedPrefsHelper: SharedPrefsHelper,
-    private val apiManager: ApiManager
+    private val apiManager: ApiManager,
+    @Named("GEMINI_API_KEY") val geminiKey: String
 ) : IPortfolioRepository {
     override suspend fun checkUserAuthenticated(): Boolean {
 
@@ -35,7 +39,8 @@ class PortfolioRepository @Inject constructor(
     }
 
     override suspend fun getLongTermHoldings(): List<StockDetails> {
-        return apiManager.getLongTermHoldings(sharedPrefsHelper["access_token", ""]).data.filter { it.average_price != 0.0 }
+        return apiManager.getLongTermHoldings(sharedPrefsHelper["access_token", ""]).data
+            .filter { it.average_price != 0.0 }
             .map {
                 StockDetails(
                     average_price = it.average_price,
@@ -65,14 +70,19 @@ class PortfolioRepository @Inject constructor(
     }
 
 
-    override suspend fun getMarketOHLC(instrumentToken: String, symbol: String, exchange: String): Flow<Ohlc> {
+    override suspend fun getMarketOHLC(
+        instrumentToken: String,
+        symbol: String,
+        exchange: String
+    ): Flow<Ohlc> {
         val response =
             apiManager.getMarketOHLC(sharedPrefsHelper["access_token", ""], instrumentToken)
         return response.flatMapLatest { it ->
             val gson = Gson()
             flowOf(
                 gson.fromJson(
-                    it.getJSONObject("data").getJSONObject("${exchange}_EQ:$symbol").getJSONObject("ohlc")
+                    it.getJSONObject("data").getJSONObject("${exchange}_EQ:$symbol")
+                        .getJSONObject("ohlc")
                         .toString(), Ohlc::class.java
                 )
             )
@@ -80,4 +90,13 @@ class PortfolioRepository @Inject constructor(
         }
     }
 
+    override suspend fun getLatestNewsFromGemini(prompt: String): Flow<GenerateContentResponse> {
+//            delay(3000)
+        val generativeModel = GenerativeModel(
+            modelName = "gemini-pro",
+            apiKey = geminiKey
+        )
+
+        return generativeModel.generateContentStream(prompt)
+    }
 }

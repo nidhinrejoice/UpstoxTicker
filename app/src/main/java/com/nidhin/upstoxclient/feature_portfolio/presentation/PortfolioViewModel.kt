@@ -7,7 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nidhin.upstoxclient.feature_portfolio.data.models.StockDetails
+import com.google.ai.client.generativeai.type.asTextOrNull
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
@@ -27,6 +28,10 @@ class PortfolioViewModel @Inject constructor(
 ) : ViewModel() {
 
     var isRefreshing = mutableStateOf(false)
+        private set
+    var isMarketDataLoading = mutableStateOf(false)
+        private set
+    var isLatestNewsLoading = mutableStateOf(false)
         private set
     private var _state = mutableStateOf(StockScreenState())
     val state: State<StockScreenState> = _state
@@ -96,17 +101,26 @@ class PortfolioViewModel @Inject constructor(
     }
 
     private var job: Job? = null
-    fun getMarketOHLC(instrument_token: String, symbol: String, exchange: String) {
+    fun getMarketOHLC(
+        instrument_token: String,
+        symbol: String,
+        exchange: String,
+        companyName: String
+    ) {
         job?.cancel()
         job = viewModelScope.launch {
+            isMarketDataLoading.value = true
             try {
                 portfolioUsecases.getMarketOHLC(instrument_token, symbol, exchange).collectLatest {
                     _state.value = state.value.copy(
-                        selectedStock = state.value.stocks.find { it.instrument_token == instrument_token }
+                        selectedStock = state.value.stocks.find { it.instrument_token == instrument_token },
+                        aiContent = ""
                     )
                     _state.value.selectedStock?.ohlc = it
+                    isMarketDataLoading.value = false
                 }
             } catch (ex: Exception) {
+                isMarketDataLoading.value = false
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(
                         Build.VERSION_CODES.S
                     ) >= 7
@@ -120,6 +134,27 @@ class PortfolioViewModel @Inject constructor(
                     _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
                 }
 
+            }
+        }
+    }
+
+    fun geminiPrompt(prompt: String) {
+        job?.cancel()
+        job = viewModelScope.launch {
+            _state.value = state.value.copy(
+                aiContent = ""
+            )
+            isLatestNewsLoading.value = true
+            try {
+                portfolioUsecases.getGeminiResponse(prompt).collect { contentRes ->
+                    _state.value = state.value.copy(
+                        aiContent = state.value.aiContent+ contentRes.candidates[0].content.parts[0].asTextOrNull()
+                    )
+                    isLatestNewsLoading.value = false
+                }
+            } catch (ex: Exception) {
+                isLatestNewsLoading.value = false
+                _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
             }
         }
     }
@@ -143,7 +178,8 @@ class PortfolioViewModel @Inject constructor(
         val stocks: List<StockDetails> = emptyList(),
         val selectedStock: StockDetails? = null,
         val stockOrder: StockOrder = StockOrder.Name(OrderType.Ascending),
-        val isOrderSectionVisible: Boolean = false
+        val isOrderSectionVisible: Boolean = false,
+        val aiContent: String? = null
     )
 
 

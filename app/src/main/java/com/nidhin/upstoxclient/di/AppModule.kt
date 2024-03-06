@@ -1,16 +1,10 @@
 package com.nidhin.upstoxclient.di
 
-import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import com.nidhin.upstoxclient.BuildConfig
 import com.nidhin.upstoxclient.api.ApiManager
 import com.nidhin.upstoxclient.api.UpstoxApiService
-import com.nidhin.upstoxclient.feature_portfolio.data.PortfolioRepository
-import com.nidhin.upstoxclient.feature_portfolio.domain.CheckUserAuthentication
-import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateAccessToken
-import com.nidhin.upstoxclient.feature_portfolio.domain.GetLongTermHoldings
-import com.nidhin.upstoxclient.feature_portfolio.domain.IPortfolioRepository
-import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.persistance.SharedPrefsHelper
 import dagger.Module
 import dagger.Provides
@@ -47,9 +41,34 @@ class AppModule {
 
     @Singleton
     @Provides
-    open fun provideApi(retrofit: Retrofit): UpstoxApiService {
+    open fun provideUpstoxApi(retrofit: Retrofit): UpstoxApiService {
         return retrofit.create(UpstoxApiService::class.java)
     }
+//    @Singleton
+//    @Provides
+//    open fun provideGeminiApi(@ApplicationContext context: Context): GeminiApiService {
+//        val onlineInterceptor = Interceptor { chain ->
+//            val response = chain.proceed(chain.request())
+//            val maxAge = 3600000 // read from cache for 300 seconds even if there is internet connection
+//            response.newBuilder()
+//                .header("Cache-Control", "public, max-age=$maxAge")
+//                .removeHeader("Pragma")
+//                .build()
+//        }
+//        val cacheSize = (10 * 1024 * 1024).toLong() // 10 MB
+//        val cache = Cache(context.cacheDir, cacheSize)
+//        val okHttpClient = OkHttpClient().newBuilder()
+//            .addNetworkInterceptor(onlineInterceptor)
+//            .cache(cache)
+//            .connectTimeout(40, TimeUnit.SECONDS)
+//            .readTimeout(40, TimeUnit.SECONDS).build()
+//        val retrofit = Retrofit.Builder()
+//            .baseUrl("https://generativelanguage.googleapis.com/v1beta/models/")
+//            .client(okHttpClient)
+//            .addConverterFactory(GsonConverterFactory.create())
+//            .build()
+//        return retrofit.create(GeminiApiService::class.java)
+//    }
 
     @Singleton
     @Provides
@@ -66,13 +85,18 @@ class AppModule {
     @Provides
     @Named("CLIENT_ID")
     fun provideClientId(): String {
-        return "15ff5c6b-7d2c-47f3-80c6-4753ef65fa0a"
+        return BuildConfig.upstoxClientId
     }
 
     @Provides
     @Named("CLIENT_SECRET")
     fun provideClientSecret(): String {
-        return "kyj80oez7a"
+        return BuildConfig.upstoxClientSecret
+    }
+    @Provides
+    @Named("GEMINI_API_KEY")
+    fun provideGeminiKey(): String {
+        return BuildConfig.geminiKey
     }
 
     @Singleton
@@ -98,6 +122,7 @@ class AppModule {
     ): ApiManager {
         return ApiManager(apiService, clientId, clientSecret)
     }
+
 
 
 }

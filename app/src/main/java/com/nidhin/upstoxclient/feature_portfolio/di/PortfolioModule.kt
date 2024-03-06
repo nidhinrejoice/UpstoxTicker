@@ -5,6 +5,7 @@ import com.nidhin.upstoxclient.feature_portfolio.domain.CheckUserAuthentication
 import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateAccessToken
 import com.nidhin.upstoxclient.feature_portfolio.domain.GetLongTermHoldings
 import com.nidhin.upstoxclient.feature_portfolio.domain.GetMarketOHLC
+import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateGeminiResponse
 import com.nidhin.upstoxclient.feature_portfolio.domain.IPortfolioRepository
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.SortHoldingsList
@@ -12,7 +13,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import retrofit2.http.GET
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -34,7 +34,8 @@ open class PortfolioModule {
             GenerateAccessToken(portfolioRepository),
             GetLongTermHoldings(portfolioRepository),
             SortHoldingsList(),
-            GetMarketOHLC(portfolioRepository)
+            GetMarketOHLC(portfolioRepository),
+            GenerateGeminiResponse(portfolioRepository)
         )
     }
 }
