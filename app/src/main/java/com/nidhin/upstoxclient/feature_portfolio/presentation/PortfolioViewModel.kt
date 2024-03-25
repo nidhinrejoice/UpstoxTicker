@@ -36,7 +36,8 @@ class PortfolioViewModel @Inject constructor(
         private set
     var isLatestNewsLoading = mutableStateOf(false)
         private set
-//    var profitLossShown = mutableStateOf(false)
+
+    //    var profitLossShown = mutableStateOf(false)
 //        private set
     private var _state = mutableStateOf(StockScreenState())
     val state: State<StockScreenState> = _state
@@ -88,18 +89,18 @@ class PortfolioViewModel @Inject constructor(
                 _eventFlow.emit(UiEvent.ShowPortfolio)
             } catch (ex: Exception) {
                 isRefreshing.value = false
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(
-                        Build.VERSION_CODES.S
-                    ) >= 7
-                ) {
-                    if (ex is retrofit2.HttpException) {
-                        showLoginPopup.value = true
-                    } else {
-                        _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
-                    }
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(
+//                        Build.VERSION_CODES.S
+//                    ) >= 7
+//                ) {
+                if (ex is retrofit2.HttpException) {
+                    showLoginPopup.value = true
                 } else {
                     _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
                 }
+//                } else {
+//                    _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
+//                }
 
             }
         }
@@ -235,7 +236,7 @@ class PortfolioViewModel @Inject constructor(
         }
     }
 
-    fun getProfitLoss(financialYear : String ="2324") {
+    fun getProfitLoss(financialYear: String = "2324") {
         viewModelScope.launch {
 //            _eventFlow.emit(UiEvent.ShowPortfolio)
             try {

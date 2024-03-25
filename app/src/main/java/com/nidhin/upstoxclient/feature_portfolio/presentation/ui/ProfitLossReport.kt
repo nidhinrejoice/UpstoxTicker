@@ -44,6 +44,7 @@ import com.nidhin.upstoxclient.utils.formatCurrency
 import com.nidhin.upstoxclient.utils.getColor
 import com.nidhin.upstoxclient.utils.getCurrentFinancialYear
 import java.util.Calendar
+import java.util.jar.Attributes.Name
 
 @Composable
 fun ProfitLossReport(
@@ -61,7 +62,7 @@ fun ProfitLossReport(
     LaunchedEffect(key1 = false) {
         viewModel.getProfitLoss(selectedFinancialYear)
     }
-    Column (){
+    Column() {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { navController.popBackStack() }) {
                 Icon(Icons.Rounded.ArrowBack, contentDescription = "Go Back")
@@ -79,6 +80,11 @@ fun ProfitLossReport(
             var orderType: OrderType by remember {
                 mutableStateOf(OrderType.Ascending)
             }
+
+            var sortOrder: StockOrder by remember {
+                mutableStateOf(StockOrder.Name(orderType))
+            }
+
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 item {
                     ExpandedDropDown(
@@ -115,22 +121,36 @@ fun ProfitLossReport(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(color = Color.LightGray)
+                            .background(color = MaterialTheme.colorScheme.secondaryContainer)
                             .padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Stock", modifier = Modifier.clickable {
+                        val arrowStockOrder =
+                            if (sortOrder is StockOrder.Name) {
+                                if (orderType is OrderType.Ascending) "\u2191" else "\u2193"
+                            } else {
+                                ""
+                            }
+                        val arrowPnlOrder =
+                            if (sortOrder is StockOrder.Pnl) {
+                                if (orderType is OrderType.Ascending) "\u2191" else "\u2193"
+                            } else {
+                                ""
+                            }
+                        Text(text = "Stock$arrowStockOrder", modifier = Modifier.clickable {
                             orderType = if (orderType is OrderType.Descending)
                                 OrderType.Ascending
                             else
                                 OrderType.Descending
-                            viewModel.sortPnl(StockOrder.Name(orderType))
+                            sortOrder = StockOrder.Name(orderType)
+                            viewModel.sortPnl(sortOrder)
                         })
-                        Text(text = "PnL", modifier = Modifier.clickable {
+                        Text(text = "PnL$arrowPnlOrder", modifier = Modifier.clickable {
                             orderType = if (orderType is OrderType.Descending)
                                 OrderType.Ascending
                             else
                                 OrderType.Descending
-                            viewModel.sortPnl(StockOrder.Pnl(orderType))
+                            sortOrder = StockOrder.Pnl(orderType)
+                            viewModel.sortPnl(sortOrder)
                         })
                     }
                 }
@@ -139,10 +159,11 @@ fun ProfitLossReport(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                if (expandedStock.isNotEmpty() && expandedStock == it.scriptName)
-                                    expandedStock = ""
-                                else
-                                    expandedStock = it.scriptName
+                                expandedStock =
+                                    if (expandedStock.isNotEmpty() && expandedStock == it.scriptName)
+                                        ""
+                                    else
+                                        it.scriptName
                             }
                             .padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -174,19 +195,28 @@ fun ProfitLossReport(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier.weight(0.1f)
                                 ) {
-                                    Text(text = "Bought On", style = MaterialTheme.typography.bodySmall)
+                                    Text(
+                                        text = "Bought On",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
                                 }
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier.weight(0.1f)
                                 ) {
-                                    Text(text = "Buy Price", style = MaterialTheme.typography.bodySmall)
+                                    Text(
+                                        text = "Buy Price",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
                                 }
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier.weight(0.1f)
                                 ) {
-                                    Text(text = "Sold On", style = MaterialTheme.typography.bodySmall)
+                                    Text(
+                                        text = "Sold On",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
                                 }
                                 Box(
                                     contentAlignment = Alignment.Center,
@@ -269,7 +299,7 @@ fun ProfitLossReport(
                                         Text(
                                             text = (details.sell_amount - details.buy_amount).formatCurrency(),
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = it.pnl.getColor()
+                                            color = (details.sell_amount - details.buy_amount).getColor()
                                         )
                                     }
                                 }

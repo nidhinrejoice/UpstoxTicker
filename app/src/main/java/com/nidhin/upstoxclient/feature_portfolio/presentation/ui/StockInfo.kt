@@ -1,5 +1,6 @@
 package com.nidhin.upstoxclient.feature_portfolio.presentation.ui
 
+import GoogleSearchView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,9 +25,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -84,7 +87,7 @@ fun StockInfo(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Rounded.ArrowBack, contentDescription = "Go Back")
                     }
-                    Text(text = "Stock Details")
+                    Text(text = "${state.selectedStock?.company_name}")
                 }
             }
             items(list) {
@@ -116,18 +119,6 @@ fun StockInfo(
                                             val color = if (negativeDay) Color.Red else Green
 
                                             Column(modifier = Modifier.weight(0.9f)) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .padding(4.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.SpaceBetween
-                                                ) {
-                                                    Text(
-                                                        text = it.company_name,
-                                                        style = MaterialTheme.typography.labelMedium
-                                                    )
-                                                    Spacer(modifier = Modifier.size(10.dp))
-                                                }
 
                                                 Row(
                                                     modifier = Modifier
@@ -367,6 +358,21 @@ fun StockInfo(
 //                        Text(text = aiPromptHeader, style = MaterialTheme.typography.titleLarge)
 //                    }
 //                }
+            item {
+                var googled by remember {
+                    mutableStateOf(false)
+                }
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+
+                    ElevatedButton(onClick = { googled = true }) {
+                        Text(text = "Google Latest News")
+                    }
+                }
+                if (googled) {
+                    GoogleSearchView(query = "${state.selectedStock?.trading_symbol} shares")
+                }
+
+            }
         }
     }
 }

@@ -48,7 +48,7 @@ fun UpstoxLoginDialog(
 //                        settings.javaScriptCanOpenWindowsAutomatically = true
 //                        settings.loadsImagesAutomatically = true
                         settings.domStorageEnabled = true
-                        settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+//                        settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
 
                         // Set a WebViewClient to handle redirects and other events
                         webViewClient = object : WebViewClient() {
