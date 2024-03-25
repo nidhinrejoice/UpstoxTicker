@@ -22,7 +22,7 @@ fun GoogleSearchView(query: String) {
                 },
                 update = { webView ->
                     webView.loadUrl(
-                        "https://cse.google.com/cse?cx=8219b4368611741f7&q=$query"
+                        "https://www.google.com/search?q=$query"
                     )
                 }
             )

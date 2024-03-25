@@ -10,6 +10,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.type.asTextOrNull
 import com.nidhin.upstoxclient.feature_portfolio.data.ScriptProfitLoss
+import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.Article
+import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.NewsApiResponse
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
@@ -35,6 +37,8 @@ class PortfolioViewModel @Inject constructor(
     var isMarketDataLoading = mutableStateOf(false)
         private set
     var isLatestNewsLoading = mutableStateOf(false)
+        private set
+    var articleCurrentPage = mutableStateOf(1)
         private set
 
     //    var profitLossShown = mutableStateOf(false)
@@ -187,7 +191,9 @@ class PortfolioViewModel @Inject constructor(
         val stockOrder: StockOrder = StockOrder.Name(OrderType.Ascending),
         val isOrderSectionVisible: Boolean = false,
         var showProfitLoss: Boolean = false,
-        val aiContent: String? = null
+        val aiContent: String? = null,
+        val latestNews: MutableList<Article> = mutableListOf(),
+        var newsLoading: Boolean = false,
     )
 
 
@@ -287,5 +293,39 @@ class PortfolioViewModel @Inject constructor(
                 )
         }
     }
+
+    private var totalArticles = 0
+
+    fun getLatestNews(stockName: String, page: Int) {
+        viewModelScope.launch {
+            if (totalArticles > 0 && totalArticles / 10 < page) {
+                _eventFlow.emit(UiEvent.ShowToast("No more articles found"))
+            } else {
+                try {
+                    articleCurrentPage.value = page
+                    if (page == 1)
+                        state.value.latestNews.clear()
+                    _state.value = state.value.copy(
+                        newsLoading = true
+                    )
+                    portfolioUsecases.getLatestNews(stockName, articleCurrentPage.value)
+                        .collectLatest {
+                            _state.value = state.value.copy(
+                                newsLoading = false
+                            )
+                            totalArticles = it.totalResults
+                            _state.value.latestNews.addAll(it.articles)
+                        }
+                } catch (ex: Exception) {
+                    _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
+                    _state.value = state.value.copy(
+                        newsLoading = false
+                    )
+
+                }
+            }
+        }
+    }
+
 
 }

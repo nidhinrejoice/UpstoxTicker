@@ -22,6 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.NewsDetails
+import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.NewsListing
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.PortfolioScreen
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.ProfitLossReport
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockAllocationsScreen
@@ -62,6 +64,7 @@ class MainActivity : ComponentActivity() {
                                 Screen.Portfolio.route
                             )
                         }
+
                         is PortfolioViewModel.UiEvent.ProfitLoss -> {
 
                             navController.navigate(
@@ -134,13 +137,37 @@ class MainActivity : ComponentActivity() {
                             val companyName = it.arguments?.getString("company_name") ?: ""
 
                             LaunchedEffect(key1 = false) {
-                                viewModel.getMarketOHLC(instrumentToken, symbol, exchange,companyName)
+                                viewModel.getMarketOHLC(
+                                    instrumentToken,
+                                    symbol,
+                                    exchange,
+                                    companyName
+                                )
                             }
-                            StockInfo(navController,viewModel.state.value,viewModel)
+                            StockInfo(navController, viewModel.state.value, viewModel)
                         }
                         composable(route = Screen.ProfitLossReport.route) {
 
                             ProfitLossReport(navController = navController, viewModel)
+                        }
+                        composable(route = Screen.NewsListing.route) {
+
+                            NewsListing(navController = navController, viewModel)
+                        }
+                        composable(
+                            route = Screen.NewsListingDetails.route + "?url={url}",
+                            arguments = listOf(
+                                navArgument(name = "url") {
+                                    type = NavType.StringType
+                                    defaultValue = ""
+                                }
+                            )
+                        ) {
+                            val url = it.arguments?.getString("url") ?:""
+                            val article = viewModel.state.value.latestNews.find { it.url == url }
+                            article?.let {
+                                NewsDetails(navController = navController, article)
+                            }
                         }
                     }
                 }
@@ -149,7 +176,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-sealed class ListViewItem{
+sealed class ListViewItem {
     object StockDetailsSection : ListViewItem()
     object TrendlyneSection : ListViewItem()
     object AiPromptSection : ListViewItem()

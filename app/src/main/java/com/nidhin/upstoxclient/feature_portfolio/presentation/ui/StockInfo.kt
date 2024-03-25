@@ -61,6 +61,7 @@ import com.nidhin.upstoxclient.R
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.AiPrompt
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ListViewItem
 import com.nidhin.upstoxclient.feature_portfolio.presentation.PortfolioViewModel
+import com.nidhin.upstoxclient.feature_portfolio.presentation.util.Screen
 import com.nidhin.upstoxclient.ui.theme.Green
 import com.nidhin.upstoxclient.utils.formatCurrency
 import com.nidhin.upstoxclient.utils.twoDecimalPlaces
@@ -77,6 +78,9 @@ fun StockInfo(
         ListViewItem.AiPromptSection,
         ListViewItem.AiPromptDetails
     )
+    var googled by remember {
+        mutableStateOf(false)
+    }
     Surface {
         LazyColumn(
             modifier = Modifier
@@ -89,6 +93,7 @@ fun StockInfo(
                     }
                     Text(text = "${state.selectedStock?.company_name}")
                 }
+
             }
             items(list) {
                 when (it) {
@@ -273,7 +278,6 @@ fun StockInfo(
                         }
                         val aiPrompts = listOf<AiPrompt>(
                             AiPrompt.Financials,
-                            AiPrompt.LatestNews,
                             AiPrompt.Advantages,
                             AiPrompt.RedFlags
                         )
@@ -307,6 +311,23 @@ fun StockInfo(
                             modifier = Modifier.fillMaxWidth()
 
                         )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+
+                            ElevatedButton(onClick = {
+                                navController.navigate(Screen.NewsListing.route)
+                            }) {
+                                Text(text = "Latest News")
+                            }
+                            ElevatedButton(onClick = { googled = true }) {
+                                Text(text = "Check Google")
+                            }
+                        }
                         if (viewModel.isLatestNewsLoading.value) {
                             Loader()
                         }
@@ -314,28 +335,29 @@ fun StockInfo(
 
                     ListViewItem.AiPromptDetails -> {
                         state.aiContent?.let { news ->
-
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                val text = news.split("**").filter { it.isNotEmpty() }
-                                Text(text = buildAnnotatedString {
-                                    for (i in text.indices) {
-                                        if (i % 2 == 0) {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            if (news.isNotEmpty()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    val text = news.split("**").filter { it.isNotEmpty() }
+                                    Text(text = buildAnnotatedString {
+                                        for (i in text.indices) {
+                                            if (i % 2 == 0) {
+                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                    append(text[i])
+                                                }
+                                            } else {
                                                 append(text[i])
-                                            }
-                                        } else {
-                                            append(text[i])
 
+                                            }
                                         }
-                                    }
-                                })
+                                    })
+                                }
                             }
+
 //                            val hasScrolledToEnd = !scrollState.isScrollInProgress
 ////                            if (hasScrolledToEnd) {
 //                                LaunchedEffect(news) { // Launch effect on data change
@@ -359,17 +381,13 @@ fun StockInfo(
 //                    }
 //                }
             item {
-                var googled by remember {
-                    mutableStateOf(false)
-                }
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-
-                    ElevatedButton(onClick = { googled = true }) {
-                        Text(text = "Google Latest News")
-                    }
-                }
                 if (googled) {
-                    GoogleSearchView(query = "${state.selectedStock?.trading_symbol} shares")
+                    val splitStr = state.selectedStock?.company_name?.split(" ")
+                    var symbol = splitStr?.get(0)
+                    if ((splitStr?.size ?: 0) > 1) {
+                        symbol += " ${splitStr?.get(1)}"
+                    }
+                    GoogleSearchView(query = "$symbol shares")
                 }
 
             }

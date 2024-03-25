@@ -1,27 +1,28 @@
 package com.nidhin.upstoxclient.api
 
-import com.google.gson.JsonElement
 import com.nidhin.upstoxclient.feature_portfolio.data.models.GenerateAccessTokenResponse
 import com.nidhin.upstoxclient.feature_portfolio.data.models.getmetadataprofitloss.GetTradeMetaData
 import com.nidhin.upstoxclient.feature_portfolio.data.models.getprofitlossreport.GetProfitLossReport
 import com.nidhin.upstoxclient.feature_portfolio.data.models.longtermholdings.GetLongTermHoldingsResponse
-import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.MarketOHLCResponse
-import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateAccessToken
+import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.NewsApiResponse
+import com.nidhin.upstoxclient.utils.formattedDate
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Response
+import java.util.Calendar
 import javax.inject.Inject
-import javax.security.auth.callback.Callback
+import javax.inject.Named
 
 class ApiManager @Inject constructor(
     private val apiService: UpstoxApiService,
+    private val newsApiService: NewsApiService,
+    @Named("NEWS_API_KEY") private val newsApiKey: String,
     private val clientId: String,
     private val clientSecret: String
 ) {
@@ -82,6 +83,7 @@ class ApiManager @Inject constructor(
             page_size = pageSize
         )
     }
+
     suspend fun getTradeMetaData(
         accessToken: String,
         financialYear: String
@@ -90,6 +92,26 @@ class ApiManager @Inject constructor(
             "Bearer $accessToken",
             segment = "EQ",
             financialYear
+        )
+    }
+
+    suspend fun getNews(
+        query: String,
+        pageSize: Int,
+        page: Int
+    ): NewsApiResponse {
+        val c = Calendar.getInstance()
+        c.add(Calendar.DATE, -30)
+        val date = c.time
+        return newsApiService.newsApi(
+            query,
+            date.formattedDate(),
+            Calendar.getInstance().time.formattedDate(),
+            "publishedAt",
+            "en",
+            newsApiKey,
+            pageSize,
+            page
         )
     }
 }

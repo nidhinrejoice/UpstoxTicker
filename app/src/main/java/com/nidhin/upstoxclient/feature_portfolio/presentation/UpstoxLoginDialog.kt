@@ -51,6 +51,9 @@ fun UpstoxLoginDialog(
 //                        settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
 
                         // Set a WebViewClient to handle redirects and other events
+                        settings.loadWithOverviewMode = true
+                        settings.useWideViewPort = true
+                        settings.setSupportZoom(true)
                         webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(
                                 view: WebView?,

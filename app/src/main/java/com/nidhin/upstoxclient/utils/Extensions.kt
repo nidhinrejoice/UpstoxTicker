@@ -8,6 +8,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 fun Float.twoDecimalPlaces(): Float {
@@ -57,6 +59,27 @@ fun Double.getColor():Color{
         Color.Red
 }
 fun Date.formattedDate(): String {
-    val formatter = SimpleDateFormat("dd/MM/yyyy") // Set desired format (American in this case)
+    val formatter = SimpleDateFormat("dd-MM-yyyy")
     return formatter.format(this)
+}
+fun String.convertIsoSecondFormatToDefaultDate(format: String): String {
+    return try {
+        val isoFormatter = DateTimeFormatter.ISO_DATE_TIME
+
+        // Define formatter for desired output format
+        val outputFormatter = DateTimeFormatter.ofPattern(format)
+
+        // Parse the ISO date string
+        val parsedDate = LocalDateTime.parse(this, isoFormatter)
+
+        // Format the parsed date in the desired output format
+        return parsedDate.format(outputFormatter)
+    } catch (e: Exception) {
+        return ""
+    }
+}
+
+fun Date.convertDate(format: String): String {
+    val sdf = SimpleDateFormat(format)
+    return sdf.format(this)
 }

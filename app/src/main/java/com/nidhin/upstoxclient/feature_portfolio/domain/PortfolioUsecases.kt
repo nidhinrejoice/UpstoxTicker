@@ -7,5 +7,6 @@ data class PortfolioUsecases(
     val sortHoldingsList: SortHoldingsList,
     val getMarketOHLC: GetMarketOHLC,
     val getGeminiResponse: GenerateGeminiResponse,
-    val getProfitLoss: GetProfitLoss
+    val getProfitLoss: GetProfitLoss,
+    val getLatestNews: GetLatestNews
 )

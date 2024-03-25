@@ -5,14 +5,13 @@ import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.gson.Gson
 import com.nidhin.upstoxclient.api.ApiManager
 import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.Ohlc
+import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.NewsApiResponse
 import com.nidhin.upstoxclient.feature_portfolio.domain.IPortfolioRepository
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.persistance.SharedPrefsHelper
-import com.nidhin.upstoxclient.utils.formattedDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -131,6 +130,16 @@ class PortfolioRepository @Inject constructor(
             )
         }
         return flowOf(profitLossList.toList())
+    }
+
+    override suspend fun getNews(query: String, page: Int): Flow<NewsApiResponse> {
+
+        val splitStr = query.split(" ")
+        var symbol = "+${splitStr?.get(0)}"
+        if ((splitStr?.size ?: 0) > 1) {
+            symbol += " ${splitStr?.get(1)}"
+        }
+        return flowOf(apiManager.getNews(symbol ?: query, 10, page))
     }
 }
 
