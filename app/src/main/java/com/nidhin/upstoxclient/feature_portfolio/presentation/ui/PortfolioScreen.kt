@@ -15,9 +15,15 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Money
+import androidx.compose.material.icons.rounded.Report
+import androidx.compose.material.icons.twotone.Send
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -72,12 +79,9 @@ fun PortfolioScreen(
                 .reduce { acc, i -> acc + i }
         val dailyPnlPercentage =
             dailyPnl / investedAmount * 100
-        val isRefreshing by remember {
-            viewModel.isRefreshing
-        }
 
         SwipeRefresh(
-            state = rememberSwipeRefreshState(isRefreshing),
+            state = rememberSwipeRefreshState(viewModel.isRefreshing.value),
             onRefresh = { viewModel.getUserHoldings() },
         ) {
             LazyColumn(
@@ -96,6 +100,15 @@ fun PortfolioScreen(
                             modifier = Modifier.padding(vertical = 8.dp),
                             style = MaterialTheme.typography.titleLarge
                         )
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd){
+                            IconButton(onClick = {
+                                navController.navigate(
+                                    Screen.ProfitLossReport.route
+                                )
+                            }) {
+                                Icon(imageVector = Icons.Rounded.Money, contentDescription = "Profit Report")
+                            }
+                        }
                     }
                 }
                 item {
@@ -129,11 +142,11 @@ fun PortfolioScreen(
                                     )
                                 }
                                 Column(horizontalAlignment = Alignment.End,
-                                    modifier = Modifier.clickable {
+                                    /*modifier = Modifier.clickable {
                                         navController.navigate(
                                             (Screen.StockAllocation.route)
                                         )
-                                    }) {
+                                    }*/) {
                                     Text(
                                         text = "Total Investment",
                                         color = MaterialTheme.colorScheme.onSurface,
@@ -193,14 +206,13 @@ fun PortfolioScreen(
                         }
                         val sortingList = listOf(
                             StockOrder.Name(OrderType.Ascending),
-                            StockOrder.Price(OrderType.Ascending),
-                            StockOrder.Pnl(OrderType.Ascending),
-                            StockOrder.Perc(OrderType.Ascending),
+                            StockOrder.InvestedAmt(OrderType.Ascending),
                             StockOrder.DailyPnl(OrderType.Ascending),
                             StockOrder.DailyPerc(OrderType.Ascending),
-                            StockOrder.InvestedAmt(OrderType.Ascending),
+                            StockOrder.Pnl(OrderType.Ascending),
+                            StockOrder.Perc(OrderType.Ascending),
                             StockOrder.CurrentAmt(OrderType.Ascending),
-
+                            StockOrder.Price(OrderType.Ascending)
                             )
                         itemsIndexed(
                             sortingList

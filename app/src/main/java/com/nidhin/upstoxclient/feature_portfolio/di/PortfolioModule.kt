@@ -6,6 +6,7 @@ import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateAccessToken
 import com.nidhin.upstoxclient.feature_portfolio.domain.GetLongTermHoldings
 import com.nidhin.upstoxclient.feature_portfolio.domain.GetMarketOHLC
 import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateGeminiResponse
+import com.nidhin.upstoxclient.feature_portfolio.domain.GetProfitLoss
 import com.nidhin.upstoxclient.feature_portfolio.domain.IPortfolioRepository
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.SortHoldingsList
@@ -35,7 +36,8 @@ open class PortfolioModule {
             GetLongTermHoldings(portfolioRepository),
             SortHoldingsList(),
             GetMarketOHLC(portfolioRepository),
-            GenerateGeminiResponse(portfolioRepository)
+            GenerateGeminiResponse(portfolioRepository),
+            GetProfitLoss(portfolioRepository)
         )
     }
 }

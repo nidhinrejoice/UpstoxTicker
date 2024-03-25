@@ -8,6 +8,7 @@ import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.Ohlc
 import com.nidhin.upstoxclient.feature_portfolio.domain.IPortfolioRepository
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.persistance.SharedPrefsHelper
+import com.nidhin.upstoxclient.utils.formattedDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -22,18 +23,22 @@ class PortfolioRepository @Inject constructor(
 ) : IPortfolioRepository {
     override suspend fun checkUserAuthenticated(): Boolean {
 
-        return if (sharedPrefsHelper.hasKey("access_token")) {
-            val authDoneAt = sharedPrefsHelper["user_authenticated_at", 0L]
-            Calendar.getInstance().timeInMillis - authDoneAt <= 36000000L
-        } else
-            false
+        return (sharedPrefsHelper.hasKey("access_token"))
     }
 
     override suspend fun generateAccessToken(code: String): Boolean {
         val response = apiManager.generateAuthToken(code)
-        response?.let {
+        response.let {
             sharedPrefsHelper.put("access_token", response.access_token)
-            sharedPrefsHelper.put("user_authenticated_at", Calendar.getInstance().timeInMillis)
+//            val currentHour = Calendar.getInstance().time.hours
+//            val currentMins = Calendar.getInstance().time.minutes
+//            if (currentHour > 3 || (currentHour == 3 && currentMins > 30)){
+//                sharedPrefsHelper.put(
+//                    "authenticated_date",
+//                    Calendar.getInstance().time.formattedDate()
+//                )
+//            }
+//            sharedPrefsHelper.put("user_authenticated_at", Calendar.getInstance().timeInMillis)
         }
         return true
     }
@@ -99,4 +104,33 @@ class PortfolioRepository @Inject constructor(
 
         return generativeModel.generateContentStream(prompt)
     }
+
+    override suspend fun getProfitLossReport(financialYear: String): Flow<List<ScriptProfitLoss>> {
+        val accessToken = sharedPrefsHelper["access_token", ""]
+        val metaData = apiManager.getTradeMetaData(accessToken, financialYear)
+        var maxPageSize = metaData.data.trades_count
+        maxPageSize += (100 - (metaData.data.trades_count % 100))
+        val response =
+            apiManager.getProfitLoss(accessToken, financialYear, maxPageSize)
+        val scripts = response.data.filter { it.scrip_name.isNotEmpty() }.groupBy { it.scrip_name }
+        val profitLossList: MutableList<ScriptProfitLoss> = mutableListOf()
+        val iter = scripts.keys.iterator()
+        while (iter.hasNext()) {
+            val sName = iter.next()
+            val scriptDetails = scripts[sName]
+            val totalPnL =
+                scriptDetails?.map { it.sell_amount - it.buy_amount }?.reduce { acc, i ->
+                    acc + i
+                } ?: 0.0
+            profitLossList.add(
+                ScriptProfitLoss(
+                    sName,
+                    totalPnL,
+                    dataList = scriptDetails ?: emptyList()
+                )
+            )
+        }
+        return flowOf(profitLossList.toList())
+    }
 }
+

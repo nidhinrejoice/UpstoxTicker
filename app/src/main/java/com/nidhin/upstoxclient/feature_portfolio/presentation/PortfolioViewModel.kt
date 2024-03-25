@@ -2,15 +2,18 @@ package com.nidhin.upstoxclient.feature_portfolio.presentation
 
 import android.os.Build
 import android.os.ext.SdkExtensions
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.type.asTextOrNull
+import com.nidhin.upstoxclient.feature_portfolio.data.ScriptProfitLoss
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.SortOrder
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StocksEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +36,8 @@ class PortfolioViewModel @Inject constructor(
         private set
     var isLatestNewsLoading = mutableStateOf(false)
         private set
+//    var profitLossShown = mutableStateOf(false)
+//        private set
     private var _state = mutableStateOf(StockScreenState())
     val state: State<StockScreenState> = _state
     private val _eventFlow = MutableSharedFlow<UiEvent>()
@@ -148,7 +153,7 @@ class PortfolioViewModel @Inject constructor(
             try {
                 portfolioUsecases.getGeminiResponse(prompt).collect { contentRes ->
                     _state.value = state.value.copy(
-                        aiContent = state.value.aiContent+ contentRes.candidates[0].content.parts[0].asTextOrNull()
+                        aiContent = state.value.aiContent + contentRes.candidates[0].content.parts[0].asTextOrNull()
                     )
                     isLatestNewsLoading.value = false
                 }
@@ -176,9 +181,11 @@ class PortfolioViewModel @Inject constructor(
 
     data class StockScreenState(
         val stocks: List<StockDetails> = emptyList(),
+        val profitLoss: List<ScriptProfitLoss> = emptyList(),
         val selectedStock: StockDetails? = null,
         val stockOrder: StockOrder = StockOrder.Name(OrderType.Ascending),
         val isOrderSectionVisible: Boolean = false,
+        var showProfitLoss: Boolean = false,
         val aiContent: String? = null
     )
 
@@ -188,6 +195,7 @@ class PortfolioViewModel @Inject constructor(
 
         //        object UpstoxLogin : UiEvent()
         object ShowPortfolio : UiEvent()
+        object ProfitLoss : UiEvent()
 //        object StockDetails : UiEvent()
     }
 
@@ -227,5 +235,56 @@ class PortfolioViewModel @Inject constructor(
         }
     }
 
+    fun getProfitLoss(financialYear : String ="2324") {
+        viewModelScope.launch {
+//            _eventFlow.emit(UiEvent.ShowPortfolio)
+            try {
+                _state.value.showProfitLoss = false
+                portfolioUsecases.getProfitLoss(financialYear).collectLatest {
+                    _state.value = state.value.copy(
+                        profitLoss = it,
+                        showProfitLoss = true
+                    )
+                }
+            } catch (ex: Exception) {
+                isRefreshing.value = false
+                _state.value = state.value.copy(
+                    showProfitLoss = true
+                )
+                _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
+
+            }
+        }
+    }
+
+    fun sortPnl(sortOrder: StockOrder) {
+        if (sortOrder is StockOrder.Name) {
+            if (sortOrder.orderType is OrderType.Descending)
+                _state.value = state.value.copy(
+                    profitLoss = state.value.profitLoss.sortedByDescending {
+                        it.scriptName
+                    }
+                )
+            else
+                _state.value = state.value.copy(
+                    profitLoss = state.value.profitLoss.sortedBy {
+                        it.scriptName
+                    }
+                )
+        } else {
+            if (sortOrder.orderType is OrderType.Descending)
+                _state.value = state.value.copy(
+                    profitLoss = state.value.profitLoss.sortedByDescending {
+                        it.pnl
+                    }
+                )
+            else
+                _state.value = state.value.copy(
+                    profitLoss = state.value.profitLoss.sortedBy {
+                        it.pnl
+                    }
+                )
+        }
+    }
 
 }

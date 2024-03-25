@@ -2,6 +2,8 @@ package com.nidhin.upstoxclient.api
 
 import com.google.gson.JsonElement
 import com.nidhin.upstoxclient.feature_portfolio.data.models.GenerateAccessTokenResponse
+import com.nidhin.upstoxclient.feature_portfolio.data.models.getmetadataprofitloss.GetTradeMetaData
+import com.nidhin.upstoxclient.feature_portfolio.data.models.getprofitlossreport.GetProfitLossReport
 import com.nidhin.upstoxclient.feature_portfolio.data.models.longtermholdings.GetLongTermHoldingsResponse
 import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.MarketOHLCResponse
 import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateAccessToken
@@ -42,12 +44,15 @@ class ApiManager @Inject constructor(
 
         return callbackFlow {
 
-            val callback = object : retrofit2.Callback<ResponseBody>{
-                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+            val callback = object : retrofit2.Callback<ResponseBody> {
+                override fun onResponse(
+                    call: Call<ResponseBody>,
+                    response: Response<ResponseBody>
+                ) {
                     launch {
-                        if(response.isSuccessful)
-                        send(JSONObject(response.body()?.string().toString()))
-                        else{
+                        if (response.isSuccessful)
+                            send(JSONObject(response.body()?.string().toString()))
+                        else {
                             throw Exception(response.errorBody().toString())
                         }
                     }
@@ -62,5 +67,29 @@ class ApiManager @Inject constructor(
                 .enqueue(callback)
             awaitClose()
         }.distinctUntilChanged()
+    }
+
+    suspend fun getProfitLoss(
+        accessToken: String,
+        financialYear: String,
+        pageSize: Int
+    ): GetProfitLossReport {
+        return apiService.getProfitLoss(
+            "Bearer $accessToken",
+            segment = "EQ",
+            financialYear,
+            page_number = 1,
+            page_size = pageSize
+        )
+    }
+    suspend fun getTradeMetaData(
+        accessToken: String,
+        financialYear: String
+    ): GetTradeMetaData {
+        return apiService.getTradeMetaData(
+            "Bearer $accessToken",
+            segment = "EQ",
+            financialYear
+        )
     }
 }

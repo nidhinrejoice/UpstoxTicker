@@ -23,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.PortfolioScreen
+import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.ProfitLossReport
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockAllocationsScreen
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockInfo
 import com.nidhin.upstoxclient.feature_portfolio.presentation.util.Screen
@@ -59,6 +60,12 @@ class MainActivity : ComponentActivity() {
 
                             navController.navigate(
                                 Screen.Portfolio.route
+                            )
+                        }
+                        is PortfolioViewModel.UiEvent.ProfitLoss -> {
+
+                            navController.navigate(
+                                Screen.ProfitLossReport.route
                             )
                         }
                     }
@@ -129,11 +136,22 @@ class MainActivity : ComponentActivity() {
                             LaunchedEffect(key1 = false) {
                                 viewModel.getMarketOHLC(instrumentToken, symbol, exchange,companyName)
                             }
-                            StockInfo(viewModel.state.value,viewModel)
+                            StockInfo(navController,viewModel.state.value,viewModel)
+                        }
+                        composable(route = Screen.ProfitLossReport.route) {
+
+                            ProfitLossReport(navController = navController, viewModel)
                         }
                     }
                 }
             }
         }
     }
+}
+
+sealed class ListViewItem{
+    object StockDetailsSection : ListViewItem()
+    object TrendlyneSection : ListViewItem()
+    object AiPromptSection : ListViewItem()
+    object AiPromptDetails : ListViewItem()
 }
