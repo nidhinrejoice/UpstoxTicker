@@ -2,8 +2,8 @@ package com.nidhin.upstoxclient.feature_portfolio.presentation
 
 import android.os.Build
 import android.os.ext.SdkExtensions
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -11,11 +11,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.type.asTextOrNull
 import com.nidhin.upstoxclient.feature_portfolio.data.ScriptProfitLoss
 import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.Article
-import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.NewsApiResponse
-import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
-import com.nidhin.upstoxclient.feature_portfolio.domain.models.SortOrder
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StocksEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,7 +36,7 @@ class PortfolioViewModel @Inject constructor(
         private set
     var isLatestNewsLoading = mutableStateOf(false)
         private set
-    var articleCurrentPage = mutableStateOf(1)
+    var articleCurrentPage = mutableIntStateOf(1)
         private set
 
     //    var profitLossShown = mutableStateOf(false)
@@ -66,7 +64,9 @@ class PortfolioViewModel @Inject constructor(
     }
 
     suspend fun generateAccessToken(code: String) {
-        viewModelScope.launch {
+        job?.cancel()
+        job =
+            viewModelScope.launch {
             try {
                 showLoginPopup.value = false
                 if (portfolioUsecases.generateAccessToken(code)) {
@@ -81,7 +81,9 @@ class PortfolioViewModel @Inject constructor(
 
     fun getUserHoldings() {
         isRefreshing.value = true
-        viewModelScope.launch {
+        job?.cancel()
+        job =
+            viewModelScope.launch {
 //            _eventFlow.emit(UiEvent.ShowPortfolio)
             try {
 
@@ -112,18 +114,17 @@ class PortfolioViewModel @Inject constructor(
 
     private var job: Job? = null
     fun getMarketOHLC(
-        instrument_token: String,
+        instrumentToken: String,
         symbol: String,
-        exchange: String,
-        companyName: String
+        exchange: String
     ) {
         job?.cancel()
         job = viewModelScope.launch {
             isMarketDataLoading.value = true
             try {
-                portfolioUsecases.getMarketOHLC(instrument_token, symbol, exchange).collectLatest {
+                portfolioUsecases.getMarketOHLC(instrumentToken, symbol, exchange).collectLatest {
                     _state.value = state.value.copy(
-                        selectedStock = state.value.stocks.find { it.instrument_token == instrument_token },
+                        selectedStock = state.value.stocks.find { it.instrument_token == instrumentToken },
                         aiContent = ""
                     )
                     _state.value.selectedStock?.ohlc = it
@@ -243,6 +244,8 @@ class PortfolioViewModel @Inject constructor(
     }
 
     fun getProfitLoss(financialYear: String = "2324") {
+        job?.cancel()
+        job =
         viewModelScope.launch {
 //            _eventFlow.emit(UiEvent.ShowPortfolio)
             try {
@@ -296,19 +299,20 @@ class PortfolioViewModel @Inject constructor(
 
     private var totalArticles = 0
 
-    fun getLatestNews(stockName: String, page: Int) {
-        viewModelScope.launch {
-            if (totalArticles > 0 && totalArticles / 10 < page) {
+    fun getLatestNews(page: Int, key: String) {
+        job?.cancel()
+        job = viewModelScope.launch {
+            if (totalArticles > 9 && totalArticles / 10 < page) {
                 _eventFlow.emit(UiEvent.ShowToast("No more articles found"))
             } else {
                 try {
-                    articleCurrentPage.value = page
+                    articleCurrentPage.intValue = page
                     if (page == 1)
                         state.value.latestNews.clear()
                     _state.value = state.value.copy(
                         newsLoading = true
                     )
-                    portfolioUsecases.getLatestNews(stockName, articleCurrentPage.value)
+                    portfolioUsecases.getLatestNews(key, articleCurrentPage.intValue)
                         .collectLatest {
                             _state.value = state.value.copy(
                                 newsLoading = false
@@ -325,6 +329,17 @@ class PortfolioViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun closeNewsDetails() {
+        articleCurrentPage.intValue = 1
+    }
+
+    fun closeNewsListing() {
+        _state.value = state.value.copy(
+            latestNews = mutableListOf()
+        )
+        job?.cancel()
     }
 
 

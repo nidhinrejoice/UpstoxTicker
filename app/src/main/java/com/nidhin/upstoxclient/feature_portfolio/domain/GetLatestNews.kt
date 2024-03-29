@@ -8,8 +8,8 @@ class GetLatestNews @Inject constructor(
     private val portfolioRepository: IPortfolioRepository
 ) {
 
-    suspend operator fun invoke(query: String, page: Int): Flow<NewsApiResponse> {
+    suspend operator fun invoke(key: String, page: Int): Flow<NewsApiResponse> {
 
-        return portfolioRepository.getNews(query, page)
+        return portfolioRepository.getNews(key, page)
     }
 }

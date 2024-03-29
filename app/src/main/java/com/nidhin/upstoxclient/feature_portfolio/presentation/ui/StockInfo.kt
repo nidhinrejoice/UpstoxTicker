@@ -16,27 +16,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,7 +41,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
@@ -99,10 +90,15 @@ fun StockInfo(
                 when (it) {
                     ListViewItem.StockDetailsSection -> {
                         if (viewModel.isMarketDataLoading.value) {
-                            Text(
-                                text = "Fetching stock OHLC...",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Fetching stock OHLC...",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
                         } else {
                             state.selectedStock?.let {
                                 ElevatedCard(
@@ -308,10 +304,13 @@ fun StockInfo(
                                         })
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth()
-
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
                         )
-
+                        var showKeySelection by remember {
+                            mutableStateOf(false)
+                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -320,13 +319,49 @@ fun StockInfo(
                         ) {
 
                             ElevatedButton(onClick = {
-                                navController.navigate(Screen.NewsListing.route)
+                                showKeySelection = true
                             }) {
                                 Text(text = "Latest News")
                             }
                             ElevatedButton(onClick = { googled = true }) {
                                 Text(text = "Check Google")
                             }
+                        }
+                        if (showKeySelection) {
+                            val keys = "${state.selectedStock?.company_name}".split(" ")
+                            var optionFirst = keys[0]
+                            var optionSecond = ""
+                            var optionThird = ""
+                            if (keys.size > 1)
+                                optionFirst += " " + keys[1]
+                            if (keys.size > 2) {
+                                optionSecond += optionFirst + " " + keys[2]
+                            }
+                            if (keys.size > 3) {
+                                keys.forEach { key ->
+                                    if (optionThird.isNotEmpty())
+                                        optionThird += " "
+                                    optionThird += key
+                                }
+                            }
+                            val keysList = mutableListOf(
+                                "${state.selectedStock?.trading_symbol}",
+                                optionFirst
+                            )
+                            if (optionSecond.isNotEmpty())
+                                keysList.add(optionSecond)
+                            if (optionThird.isNotEmpty())
+                                keysList.add(optionThird)
+                            ChooseStockKeyDialog(
+                                onDismiss = {
+                                    showKeySelection = false
+                                },
+                                keysList = keysList,
+                                onKeySelected = { key ->
+                                    showKeySelection = false
+                                    navController.navigate(Screen.NewsListing.route + "?key=$key")
+                                }
+                            )
                         }
                         if (viewModel.isLatestNewsLoading.value) {
                             Loader()

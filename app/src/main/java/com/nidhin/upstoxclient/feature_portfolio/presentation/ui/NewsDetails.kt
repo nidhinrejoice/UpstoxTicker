@@ -18,18 +18,23 @@ import androidx.navigation.NavController
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.Article
+import com.nidhin.upstoxclient.feature_portfolio.presentation.PortfolioViewModel
 
 @Composable
 fun NewsDetails(
     navController: NavController,
-    article: Article
+    article: Article,
+    viewModel : PortfolioViewModel
 ) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = {
+                viewModel.closeNewsDetails()
+                navController.popBackStack()
+            }) {
                 Icon(Icons.Rounded.ArrowBack, contentDescription = "Go Back")
             }
             Text(text = "News - ${article.source?.name}", maxLines = 1)

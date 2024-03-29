@@ -132,14 +132,9 @@ class PortfolioRepository @Inject constructor(
         return flowOf(profitLossList.toList())
     }
 
-    override suspend fun getNews(query: String, page: Int): Flow<NewsApiResponse> {
+    override suspend fun getNews(key: String, page: Int): Flow<NewsApiResponse> {
 
-        val splitStr = query.split(" ")
-        var symbol = "+${splitStr?.get(0)}"
-        if ((splitStr?.size ?: 0) > 1) {
-            symbol += " ${splitStr?.get(1)}"
-        }
-        return flowOf(apiManager.getNews(symbol ?: query, 10, page))
+        return flowOf(apiManager.getNews("$key shares", 10, page))
     }
 }
 

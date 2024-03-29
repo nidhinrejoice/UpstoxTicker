@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,8 +24,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -32,6 +39,12 @@ import coil.request.CachePolicy
 import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.nidhin.upstoxclient.R
 import com.nidhin.upstoxclient.feature_portfolio.presentation.PortfolioViewModel
 import com.nidhin.upstoxclient.feature_portfolio.presentation.util.Screen
 import com.nidhin.upstoxclient.utils.convertIsoSecondFormatToDefaultDate
@@ -40,23 +53,25 @@ import kotlinx.coroutines.Dispatchers
 @Composable
 fun NewsListing(
     navController: NavController,
-    viewModel: PortfolioViewModel
+    viewModel: PortfolioViewModel,
+    key: String
 ) {
 
     LaunchedEffect(key1 = false) {
-        viewModel.state.value.selectedStock?.let {
-            viewModel.getLatestNews(it.company_name, 1)
-        }
+        viewModel.getLatestNews(1, key)
     }
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = {
+                viewModel.closeNewsListing()
+                navController.popBackStack()
+            }) {
                 Icon(Icons.Rounded.ArrowBack, contentDescription = "Go Back")
             }
-            Text(text = viewModel.state.value.selectedStock?.company_name + " in the NEWS")
+            Text(text = "$key in the NEWS")
         }
         LazyColumn(
             modifier = Modifier
@@ -98,6 +113,7 @@ fun NewsListing(
                             val imageRequest = ImageRequest.Builder(context)
                                 .data(imageUrl)
                                 .listener(listener)
+//                                .scale(Scale.FILL)
                                 .dispatcher(Dispatchers.IO)
                                 .memoryCacheKey(imageUrl)
                                 .diskCacheKey(imageUrl)
@@ -107,6 +123,8 @@ fun NewsListing(
 
                             // Load and display the image with AsyncImage
                             AsyncImage(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentScale = ContentScale.FillWidth,
                                 model = imageRequest,
                                 contentDescription = null,
                             )
@@ -140,25 +158,45 @@ fun NewsListing(
                 }
             }
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .padding(8.dp)
-                        .clickable {
-                            viewModel.state.value.selectedStock?.let {
+                if (viewModel.state.value.newsLoading) {
+//                        Text(
+//                            text = "Fetching news..."
+//                        )
+                    NewsLoader()
+                } else if (viewModel.state.value.latestNews.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp)
+                            .clickable {
                                 viewModel.getLatestNews(
-                                    it.company_name,
-                                    viewModel.articleCurrentPage.value + 1
+                                    viewModel.articleCurrentPage.intValue + 1,
+                                    key
                                 )
-                            }
-                        }, contentAlignment = Alignment.Center
-                ) {
-                    if (viewModel.state.value.newsLoading) {
+                            }, horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.size(70.dp))
                         Text(
-                            text = "Fetching news..."
+                            text = "No Articles Found. Click to retry",
+                            style = MaterialTheme.typography.bodySmall
                         )
-                    } else {
+                        Spacer(modifier = Modifier.size(70.dp))
+                    }
+                } else if (viewModel.state.value.latestNews.isNotEmpty()) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .padding(8.dp)
+                            .clickable {
+                                viewModel.getLatestNews(
+                                    viewModel.articleCurrentPage.intValue + 1,
+                                    key
+                                )
+                            }, contentAlignment = Alignment.Center
+                    ) {
+
                         Text(text = "Load more...")
                     }
                 }
@@ -166,4 +204,46 @@ fun NewsListing(
         }
     }
 
+}
+
+
+@Composable
+fun NewsLoader() {
+    val isPlaying by remember {
+        mutableStateOf(true)
+    }
+    val speed by remember {
+        mutableStateOf(1f)
+    }
+    var repeat by remember {
+        mutableStateOf(true)
+    }
+    val composition by rememberLottieComposition(
+
+        LottieCompositionSpec
+            .RawRes(R.raw.news_loading)
+
+    )
+
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever,
+        isPlaying = isPlaying,
+        speed = speed,
+        restartOnPlay = false
+
+    )
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Spacer(modifier = Modifier.size(20.dp))
+        LottieAnimation(
+            composition,
+            progress,
+            modifier = Modifier.size(80.dp)
+        )
+
+    }
 }

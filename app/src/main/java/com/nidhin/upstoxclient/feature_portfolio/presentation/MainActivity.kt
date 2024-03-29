@@ -28,6 +28,7 @@ import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.PortfolioScreen
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.ProfitLossReport
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockAllocationsScreen
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockInfo
+import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.UpstoxLoginDialog
 import com.nidhin.upstoxclient.feature_portfolio.presentation.util.Screen
 import com.nidhin.upstoxclient.ui.theme.UpstoxClientTheme
 import com.nidhin.upstoxclient.utils.showCustomToast
@@ -140,8 +141,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel.getMarketOHLC(
                                     instrumentToken,
                                     symbol,
-                                    exchange,
-                                    companyName
+                                    exchange
                                 )
                             }
                             StockInfo(navController, viewModel.state.value, viewModel)
@@ -150,9 +150,16 @@ class MainActivity : ComponentActivity() {
 
                             ProfitLossReport(navController = navController, viewModel)
                         }
-                        composable(route = Screen.NewsListing.route) {
-
-                            NewsListing(navController = navController, viewModel)
+                        composable(
+                            route = Screen.NewsListing.route + "?key={key}",
+                            arguments = listOf(
+                                navArgument(name = "key") {
+                                    type = NavType.StringType
+                                    defaultValue = ""
+                                }
+                            )) {
+                            val key = it.arguments?.getString("key") ?: ""
+                            NewsListing(navController = navController, viewModel, key)
                         }
                         composable(
                             route = Screen.NewsListingDetails.route + "?url={url}",
@@ -163,10 +170,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         ) {
-                            val url = it.arguments?.getString("url") ?:""
+                            val url = it.arguments?.getString("url") ?: ""
                             val article = viewModel.state.value.latestNews.find { it.url == url }
                             article?.let {
-                                NewsDetails(navController = navController, article)
+                                NewsDetails(navController = navController, article, viewModel)
                             }
                         }
                     }
