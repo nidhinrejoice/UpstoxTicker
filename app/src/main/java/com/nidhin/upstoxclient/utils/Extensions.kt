@@ -59,7 +59,7 @@ fun Double.getColor():Color{
         Color.Red
 }
 fun Date.formattedDate(): String {
-    val formatter = SimpleDateFormat("dd-MM-yyyy")
+    val formatter = SimpleDateFormat("yyyy-MM-dd")
     return formatter.format(this)
 }
 fun String.convertIsoSecondFormatToDefaultDate(format: String): String {

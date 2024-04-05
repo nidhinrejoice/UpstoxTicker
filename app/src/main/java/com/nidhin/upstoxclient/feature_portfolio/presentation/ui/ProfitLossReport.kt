@@ -33,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
@@ -44,7 +43,6 @@ import com.nidhin.upstoxclient.utils.formatCurrency
 import com.nidhin.upstoxclient.utils.getColor
 import com.nidhin.upstoxclient.utils.getCurrentFinancialYear
 import java.util.Calendar
-import java.util.jar.Attributes.Name
 
 @Composable
 fun ProfitLossReport(
@@ -88,7 +86,7 @@ fun ProfitLossReport(
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 item {
                     ExpandedDropDown(
-                        items = listOf("2023-2024", "2022-2023", "2021-2022", "2020-2021"),
+                        items = listOf("2024-2025","2023-2024", "2022-2023", "2021-2022", "2020-2021"),
                         selectedItem = selectedFinancialYear, label = "Financial Year:"
                     ) {
                         selectedFinancialYear = it

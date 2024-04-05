@@ -113,9 +113,9 @@ class PortfolioRepository @Inject constructor(
             apiManager.getProfitLoss(accessToken, financialYear, maxPageSize)
         val scripts = response.data.filter { it.scrip_name.isNotEmpty() }.groupBy { it.scrip_name }
         val profitLossList: MutableList<ScriptProfitLoss> = mutableListOf()
-        val iter = scripts.keys.iterator()
-        while (iter.hasNext()) {
-            val sName = iter.next()
+        val iterator = scripts.keys.iterator()
+        while (iterator.hasNext()) {
+            val sName = iterator.next()
             val scriptDetails = scripts[sName]
             val totalPnL =
                 scriptDetails?.map { it.sell_amount - it.buy_amount }?.reduce { acc, i ->

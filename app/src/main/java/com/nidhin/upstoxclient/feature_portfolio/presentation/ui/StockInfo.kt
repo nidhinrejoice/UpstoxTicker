@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ElevatedFilterChip
@@ -90,10 +91,13 @@ fun StockInfo(
                 when (it) {
                     ListViewItem.StockDetailsSection -> {
                         if (viewModel.isMarketDataLoading.value) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
+                                CircularProgressIndicator()
                                 Text(
                                     text = "Fetching stock OHLC...",
                                     style = MaterialTheme.typography.bodySmall
