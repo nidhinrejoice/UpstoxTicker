@@ -31,3 +31,14 @@ google-services.json
 
 # Android Profiling
 *.hprof
+.DS_Store
+app/.DS_Store
+app/src/.DS_Store
+app/src/main/.DS_Store
+app/src/main/java/.DS_Store
+app/src/main/java/com/.DS_Store
+app/src/main/java/com/nidhin/.DS_Store
+app/src/main/java/com/nidhin/upstoxclient/.DS_Store
+app/src/main/java/com/nidhin/upstoxclient/feature_portfolio/.DS_Store
+app/src/main/java/com/nidhin/upstoxclient/feature_portfolio/presentation/.DS_Store
+gradle.properties

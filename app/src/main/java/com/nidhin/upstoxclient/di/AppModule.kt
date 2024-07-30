@@ -125,19 +125,19 @@ class AppModule {
     @Provides
     @Named("CLIENT_ID")
     fun provideClientId(): String {
-        return BuildConfig.upstoxClientId
+        return BuildConfig.clientId
     }
 
     @Provides
     @Named("CLIENT_SECRET")
     fun provideClientSecret(): String {
-        return BuildConfig.upstoxClientSecret
+        return BuildConfig.clientSecret
     }
 
     @Provides
     @Named("GEMINI_API_KEY")
     fun provideGeminiKey(): String {
-        return BuildConfig.geminiKey
+        return BuildConfig.geminiApiKey
     }
 
     @Provides
