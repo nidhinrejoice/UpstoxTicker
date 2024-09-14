@@ -110,6 +110,8 @@ class PortfolioViewModel @Inject constructor(
                         _state.value = _state.value.copy(
                             userState = UserState.Expired
                         )
+                        _eventFlow.emit(UiEvent.ShowToast("Login expired"))
+                        _eventFlow.emit(UiEvent.UpstoxLogin)
                     } else {
                         _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
                     }
@@ -127,7 +129,7 @@ class PortfolioViewModel @Inject constructor(
         symbol: String,
         exchange: String
     ) {
-        job?.cancel()
+//        job?.cancel()
         job = viewModelScope.launch {
             isMarketDataLoading.value = true
             try {
@@ -149,6 +151,7 @@ class PortfolioViewModel @Inject constructor(
                         _state.value = _state.value.copy(
                             userState = UserState.Expired
                         )
+                        _eventFlow.emit(UiEvent.UpstoxLogin)
                     } else {
                         _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
                     }

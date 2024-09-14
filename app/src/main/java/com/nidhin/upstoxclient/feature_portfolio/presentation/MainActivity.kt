@@ -32,7 +32,6 @@ import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.ProfitLossRepor
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockAllocationsScreen
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockInfo
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.UpstoxLogin
-import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.UpstoxLoginDialog
 import com.nidhin.upstoxclient.feature_portfolio.presentation.util.Screen
 import com.nidhin.upstoxclient.ui.theme.UpstoxClientTheme
 import com.nidhin.upstoxclient.utils.showCustomToast
@@ -61,7 +60,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     LaunchedEffect(key1 = null) {
                         lifecycleScope.launch {
-                            repeatOnLifecycle(Lifecycle.State.STARTED){
+                            repeatOnLifecycle(Lifecycle.State.STARTED) {
                                 viewModel.eventFlow.collect { event ->
                                     when (event) {
                                         is PortfolioViewModel.UiEvent.ShowToast -> {
@@ -86,11 +85,17 @@ class MainActivity : ComponentActivity() {
                                                 Screen.ProfitLossReport.route
                                             )
                                         }
+
                                         is PortfolioViewModel.UiEvent.UpstoxLogin -> {
 
                                             navController.navigate(
                                                 Screen.UpstoxLogin.route
-                                            )
+                                            ) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    inclusive = true
+                                                }
+                                                launchSingleTop = true
+                                            }
                                         }
                                     }
                                 }
@@ -102,7 +107,6 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = Screen.Portfolio.route
                     ) {
-
 
 
 //                        composable(route = Screen.UpstoxLogin.route) {
