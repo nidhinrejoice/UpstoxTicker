@@ -14,7 +14,6 @@ interface IPortfolioRepository {
     suspend fun getLongTermHoldings(): List<StockDetails>
     suspend fun getMarketOHLC(instrumentToken: String, symbol: String, exchange: String): Flow<Ohlc>
 
-    suspend fun getLatestNewsFromGemini(companyName: String): Flow<GenerateContentResponse>
     suspend fun getProfitLossReport(financialYear: String): Flow<List<ScriptProfitLoss>>
     suspend fun getNews(key: String, page: Int): Flow<NewsApiResponse>
 }

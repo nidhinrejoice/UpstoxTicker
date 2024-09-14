@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.type.asTextOrNull
 import com.nidhin.upstoxclient.feature_portfolio.data.ScriptProfitLoss
 import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.Article
+import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateGeminiResponse
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
@@ -27,7 +28,8 @@ import javax.inject.Inject
 @HiltViewModel
 class PortfolioViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val portfolioUsecases: PortfolioUsecases
+    private val portfolioUsecases: PortfolioUsecases,
+    private val generateGeminiResponse: GenerateGeminiResponse
 ) : ViewModel() {
 
     var isRefreshing = mutableStateOf(false)
@@ -157,7 +159,7 @@ class PortfolioViewModel @Inject constructor(
             )
             isLatestNewsLoading.value = true
             try {
-                portfolioUsecases.getGeminiResponse(prompt).collect { contentRes ->
+                generateGeminiResponse(prompt).collect { contentRes ->
                     _state.value = state.value.copy(
                         aiContent = state.value.aiContent + contentRes.candidates[0].content.parts[0].asTextOrNull()
                     )

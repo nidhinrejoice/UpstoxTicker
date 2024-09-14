@@ -125,25 +125,25 @@ class AppModule {
     @Provides
     @Named("CLIENT_ID")
     fun provideClientId(): String {
-        return BuildConfig.clientId
+        return BuildConfig.CLIENT_ID
     }
 
     @Provides
     @Named("CLIENT_SECRET")
     fun provideClientSecret(): String {
-        return BuildConfig.clientSecret
+        return BuildConfig.CLIENT_SECRET
     }
 
     @Provides
     @Named("GEMINI_API_KEY")
     fun provideGeminiKey(): String {
-        return BuildConfig.geminiApiKey
+        return BuildConfig.GEMINI_API_KEY
     }
 
     @Provides
     @Named("NEWS_API_KEY")
     fun provideNewsApiKey(): String {
-        return BuildConfig.newsApiKey
+        return BuildConfig.NEWS_API_KEY
     }
 
     @Singleton

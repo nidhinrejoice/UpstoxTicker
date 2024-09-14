@@ -37,7 +37,6 @@ open class PortfolioModule {
             GetLongTermHoldings(portfolioRepository),
             SortHoldingsList(),
             GetMarketOHLC(portfolioRepository),
-            GenerateGeminiResponse(portfolioRepository),
             GetProfitLoss(portfolioRepository),
             GetLatestNews(portfolioRepository)
         )

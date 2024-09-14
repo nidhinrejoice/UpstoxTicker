@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.nidhin.upstoxclient.BuildConfig
 import kotlinx.coroutines.launch
 
 @Composable
@@ -29,7 +30,7 @@ fun UpstoxLoginDialog(
             val scope = rememberCoroutineScope()
             // Specify the URL you want to load in the WebView
             val url =
-                "https://api.upstox.com/v2/login/authorization/dialog?client_id=15ff5c6b-7d2c-47f3-80c6-4753ef65fa0a&redirect_uri=https://www.upstox.com&response_type=code"
+                "https://api.upstox.com/v2/login/authorization/dialog?client_id=${BuildConfig.CLIENT_ID}&redirect_uri=https://www.upstox.com&response_type=code"
 
             // Use the AndroidView composable to embed the WebView
             AndroidView(

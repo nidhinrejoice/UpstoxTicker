@@ -5,10 +5,10 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class GenerateGeminiResponse @Inject constructor(
-    private val portfolioRepository: IPortfolioRepository
+    private val geminiRepository: IGeminiRepository
 ) {
 
     suspend operator fun invoke(prompt: String): Flow<GenerateContentResponse> {
-        return portfolioRepository.getLatestNewsFromGemini(prompt)
+        return geminiRepository.getLatestNewsFromGemini(prompt)
     }
 }

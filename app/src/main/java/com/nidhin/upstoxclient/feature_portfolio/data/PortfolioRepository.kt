@@ -1,7 +1,5 @@
 package com.nidhin.upstoxclient.feature_portfolio.data
 
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.google.gson.Gson
 import com.nidhin.upstoxclient.api.ApiManager
 import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.Ohlc
@@ -13,12 +11,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
-import javax.inject.Named
 
 class PortfolioRepository @Inject constructor(
     private val sharedPrefsHelper: SharedPrefsHelper,
     private val apiManager: ApiManager,
-    @Named("GEMINI_API_KEY") val geminiKey: String
 ) : IPortfolioRepository {
     override suspend fun checkUserAuthenticated(): Boolean {
 
@@ -94,15 +90,6 @@ class PortfolioRepository @Inject constructor(
         }
     }
 
-    override suspend fun getLatestNewsFromGemini(prompt: String): Flow<GenerateContentResponse> {
-//            delay(3000)
-        val generativeModel = GenerativeModel(
-            modelName = "gemini-pro",
-            apiKey = geminiKey
-        )
-
-        return generativeModel.generateContentStream(prompt)
-    }
 
     override suspend fun getProfitLossReport(financialYear: String): Flow<List<ScriptProfitLoss>> {
         val accessToken = sharedPrefsHelper["access_token", ""]
