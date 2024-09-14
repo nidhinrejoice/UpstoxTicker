@@ -1,5 +1,6 @@
 package com.nidhin.upstoxclient.feature_portfolio.presentation
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -16,7 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -28,6 +31,7 @@ import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.PortfolioScreen
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.ProfitLossReport
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockAllocationsScreen
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.StockInfo
+import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.UpstoxLogin
 import com.nidhin.upstoxclient.feature_portfolio.presentation.ui.UpstoxLoginDialog
 import com.nidhin.upstoxclient.feature_portfolio.presentation.util.Screen
 import com.nidhin.upstoxclient.ui.theme.UpstoxClientTheme
@@ -42,60 +46,65 @@ class MainActivity : ComponentActivity() {
     private lateinit var toast: Toast
     private val viewModel: PortfolioViewModel by viewModels()
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         toast = Toast(this)
         setContent {
             val scope = rememberCoroutineScope()
             val navController = rememberNavController()
-            var showLogin by remember { mutableStateOf(false) }
-            LaunchedEffect(key1 = false) {
 
-                viewModel.getUserHoldings()
-                viewModel.eventFlow.collect { event ->
-                    when (event) {
-                        is PortfolioViewModel.UiEvent.ShowToast -> {
-                            toast.showCustomToast(this@MainActivity, event.message)
-                        }
-
-                        is PortfolioViewModel.UiEvent.ShowPortfolio -> {
-
-                            navController.navigate(
-                                Screen.Portfolio.route
-                            )
-                        }
-
-                        is PortfolioViewModel.UiEvent.ProfitLoss -> {
-
-                            navController.navigate(
-                                Screen.ProfitLossReport.route
-                            )
-                        }
-                    }
-                }
-            }
             UpstoxClientTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    LaunchedEffect(key1 = null) {
+                        lifecycleScope.launch {
+                            repeatOnLifecycle(Lifecycle.State.STARTED){
+                                viewModel.eventFlow.collect { event ->
+                                    when (event) {
+                                        is PortfolioViewModel.UiEvent.ShowToast -> {
+                                            toast.showCustomToast(this@MainActivity, event.message)
+                                        }
 
-                    var showLogin by remember { viewModel.showLoginPopup }
-                    if (showLogin) {
-                        UpstoxLoginDialog(onDismiss = {
-                            showLogin = false
-                        }, onCodeGenerated = {
-                            lifecycleScope.launch {
-                                viewModel.generateAccessToken(it)
+                                        is PortfolioViewModel.UiEvent.ShowPortfolio -> {
+
+                                            navController.navigate(
+                                                Screen.Portfolio.route
+                                            ) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    inclusive = true
+                                                }
+                                                launchSingleTop = true
+                                            }
+                                        }
+
+                                        is PortfolioViewModel.UiEvent.ProfitLoss -> {
+
+                                            navController.navigate(
+                                                Screen.ProfitLossReport.route
+                                            )
+                                        }
+                                        is PortfolioViewModel.UiEvent.UpstoxLogin -> {
+
+                                            navController.navigate(
+                                                Screen.UpstoxLogin.route
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                        })
+                        }
                     }
+//                    val userState by remember { mutableStateOf( viewModel.state.value.userState) }
                     NavHost(
                         navController = navController,
                         startDestination = Screen.Portfolio.route
                     ) {
+
+
+
 //                        composable(route = Screen.UpstoxLogin.route) {
 //                            WebViewScreen {
 //                                scope.launch {
@@ -103,6 +112,13 @@ class MainActivity : ComponentActivity() {
 //                                }
 //                            }
 //                        }
+
+                        composable(route = Screen.UpstoxLogin.route) {
+
+                            UpstoxLogin {
+                                viewModel.generateAccessToken(it)
+                            }
+                        }
                         composable(route = Screen.Portfolio.route) {
 
                             PortfolioScreen(navController = navController)

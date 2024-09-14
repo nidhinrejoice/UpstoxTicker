@@ -1,8 +1,6 @@
 package com.nidhin.upstoxclient.feature_portfolio.presentation.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,8 +15,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Money
-import androidx.compose.material.icons.rounded.Report
-import androidx.compose.material.icons.twotone.Send
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,27 +23,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
-import com.nidhin.upstoxclient.feature_portfolio.domain.models.SortOrder
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StocksEvent
 import com.nidhin.upstoxclient.feature_portfolio.presentation.PortfolioViewModel
 import com.nidhin.upstoxclient.feature_portfolio.presentation.util.Screen
-import com.nidhin.upstoxclient.ui.theme.Green
 import com.nidhin.upstoxclient.utils.formatCurrency
+import com.nidhin.upstoxclient.utils.getColor
 import com.nidhin.upstoxclient.utils.twoDecimalPlaces
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +46,12 @@ fun PortfolioScreen(
     viewModel: PortfolioViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.value
+//    LaunchedEffect(key1 = null) {
+//
+//        viewModel.getUserHoldings()
+//    }
+
+
     if (state.stocks.isNotEmpty()) {
         val currentAmount =
             state.stocks.map { it.quantity * it.last_price }
@@ -172,7 +167,8 @@ fun PortfolioScreen(
                                     )
                                     Text(
                                         text = (currentAmount - investedAmount).formatCurrency() + " (${percentageGain.twoDecimalPlaces()}%)",
-                                        style = MaterialTheme.typography.labelLarge
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = (currentAmount-investedAmount).getColor()
                                     )
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
@@ -183,7 +179,8 @@ fun PortfolioScreen(
                                     )
                                     Text(
                                         text = dailyPnl.formatCurrency() + " (${dailyPnlPercentage.twoDecimalPlaces()}%)",
-                                        style = MaterialTheme.typography.labelLarge
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = dailyPnl.getColor()
                                     )
                                 }
                             }

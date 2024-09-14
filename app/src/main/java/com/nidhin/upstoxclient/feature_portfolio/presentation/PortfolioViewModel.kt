@@ -45,40 +45,45 @@ class PortfolioViewModel @Inject constructor(
 //        private set
     private var _state = mutableStateOf(StockScreenState())
     val state: State<StockScreenState> = _state
-    private val _eventFlow = MutableSharedFlow<UiEvent>()
+    private val _eventFlow = MutableSharedFlow<UiEvent>(replay = 3)
     val eventFlow = _eventFlow.asSharedFlow()
 
 //    private var _stockList = mutableStateListOf<StockDetails>()
 //    val stockList: List<StockDetails> = _stockList
 
-    var showLoginPopup = mutableStateOf(false)
-        private set
+//    var showLoginPopup = mutableStateOf(false)
+//        private set
 
     init {
         viewModelScope.launch {
             if (portfolioUsecases.checkUserAuthentication()) {
                 getUserHoldings()
             } else {
-                showLoginPopup.value = true
-//                _eventFlow.emit(UiEvent.UpstoxLogin)
+                _state.value = _state.value.copy(
+                    userState = UserState.Expired
+                )
+                _eventFlow.emit(UiEvent.UpstoxLogin)
             }
         }
     }
 
-    suspend fun generateAccessToken(code: String) {
+    fun generateAccessToken(code: String) {
         job?.cancel()
         job =
             viewModelScope.launch {
-            try {
-                showLoginPopup.value = false
-                if (portfolioUsecases.generateAccessToken(code)) {
-                    getUserHoldings()
+                try {
+                    if (portfolioUsecases.generateAccessToken(code)) {
+                        _state.value = _state.value.copy(
+                            userState = UserState.LoggedIn
+                        )
+                        getUserHoldings()
+                    }
+                } catch (ex: Exception) {
+                    _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
+                    _eventFlow.emit(UiEvent.UpstoxLogin)
                 }
-            } catch (ex: Exception) {
-                _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
-            }
 
-        }
+            }
     }
 
     fun getUserHoldings() {
@@ -87,31 +92,33 @@ class PortfolioViewModel @Inject constructor(
         job =
             viewModelScope.launch {
 //            _eventFlow.emit(UiEvent.ShowPortfolio)
-            try {
+                try {
 
-                _state.value = state.value.copy(
-                    stocks = portfolioUsecases.getLongTermHoldings(state.value.stockOrder),
-                    stockOrder = state.value.stockOrder
-                )
-                isRefreshing.value = false
-                _eventFlow.emit(UiEvent.ShowPortfolio)
-            } catch (ex: Exception) {
-                isRefreshing.value = false
+                    _state.value = _state.value.copy(
+                        stocks = portfolioUsecases.getLongTermHoldings(state.value.stockOrder),
+                        stockOrder = state.value.stockOrder
+                    )
+                    isRefreshing.value = false
+                    _eventFlow.emit(UiEvent.ShowPortfolio)
+                } catch (ex: Exception) {
+                    isRefreshing.value = false
 //                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(
 //                        Build.VERSION_CODES.S
 //                    ) >= 7
 //                ) {
-                if (ex is retrofit2.HttpException) {
-                    showLoginPopup.value = true
-                } else {
-                    _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
-                }
+                    if (ex is retrofit2.HttpException) {
+                        _state.value = _state.value.copy(
+                            userState = UserState.Expired
+                        )
+                    } else {
+                        _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
+                    }
 //                } else {
 //                    _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
 //                }
 
+                }
             }
-        }
     }
 
     private var job: Job? = null
@@ -139,7 +146,9 @@ class PortfolioViewModel @Inject constructor(
                     ) >= 7
                 ) {
                     if (ex is retrofit2.HttpException) {
-                        showLoginPopup.value = true
+                        _state.value = _state.value.copy(
+                            userState = UserState.Expired
+                        )
                     } else {
                         _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
                     }
@@ -191,19 +200,24 @@ class PortfolioViewModel @Inject constructor(
         val stocks: List<StockDetails> = emptyList(),
         val profitLoss: List<ScriptProfitLoss> = emptyList(),
         val selectedStock: StockDetails? = null,
-        val stockOrder: StockOrder = StockOrder.Name(OrderType.Ascending),
+        val stockOrder: StockOrder = StockOrder.DailyPerc(OrderType.Descending),
         val isOrderSectionVisible: Boolean = false,
         var showProfitLoss: Boolean = false,
         val aiContent: String? = null,
         val latestNews: MutableList<Article> = mutableListOf(),
         var newsLoading: Boolean = false,
+        var userState: UserState = UserState.Anonymous
     )
+
+    enum class UserState {
+        LoggedIn, Expired, Anonymous
+    }
 
 
     sealed class UiEvent {
         data class ShowToast(val message: String) : UiEvent()
 
-        //        object UpstoxLogin : UiEvent()
+        object UpstoxLogin : UiEvent()
         object ShowPortfolio : UiEvent()
         object ProfitLoss : UiEvent()
 //        object StockDetails : UiEvent()
@@ -248,25 +262,25 @@ class PortfolioViewModel @Inject constructor(
     fun getProfitLoss(financialYear: String = "2324") {
         job?.cancel()
         job =
-        viewModelScope.launch {
+            viewModelScope.launch {
 //            _eventFlow.emit(UiEvent.ShowPortfolio)
-            try {
-                _state.value.showProfitLoss = false
-                portfolioUsecases.getProfitLoss(financialYear).collectLatest {
+                try {
+                    _state.value.showProfitLoss = false
+                    portfolioUsecases.getProfitLoss(financialYear).collectLatest {
+                        _state.value = state.value.copy(
+                            profitLoss = it,
+                            showProfitLoss = true
+                        )
+                    }
+                } catch (ex: Exception) {
+                    isRefreshing.value = false
                     _state.value = state.value.copy(
-                        profitLoss = it,
                         showProfitLoss = true
                     )
-                }
-            } catch (ex: Exception) {
-                isRefreshing.value = false
-                _state.value = state.value.copy(
-                    showProfitLoss = true
-                )
-                _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
+                    _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
 
+                }
             }
-        }
     }
 
     fun sortPnl(sortOrder: StockOrder) {
