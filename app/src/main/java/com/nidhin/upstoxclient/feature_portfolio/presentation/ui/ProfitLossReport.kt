@@ -12,14 +12,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ElevatedFilterChip
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,8 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.Month
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.StocksEvent
 import com.nidhin.upstoxclient.feature_portfolio.presentation.PortfolioViewModel
 import com.nidhin.upstoxclient.ui.theme.Green
 import com.nidhin.upstoxclient.utils.formatCurrency
@@ -44,6 +50,7 @@ import com.nidhin.upstoxclient.utils.getColor
 import com.nidhin.upstoxclient.utils.getCurrentFinancialYear
 import java.util.Calendar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfitLossReport(
     navController: NavController,
@@ -57,8 +64,12 @@ fun ProfitLossReport(
     var expandedStock by remember {
         mutableStateOf("")
     }
+
+    var selectedMonth by remember {
+        mutableStateOf<Month?>(null)
+    }
     LaunchedEffect(key1 = false) {
-        viewModel.getProfitLoss(selectedFinancialYear)
+        viewModel.getProfitLoss(selectedFinancialYear, selectedMonth)
     }
     Column() {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -86,11 +97,18 @@ fun ProfitLossReport(
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 item {
                     ExpandedDropDown(
-                        items = listOf("2024-2025","2023-2024", "2022-2023", "2021-2022", "2020-2021"),
+                        items = listOf(
+                            "2024-2025",
+                            "2023-2024",
+                            "2022-2023",
+                            "2021-2022",
+                            "2020-2021"
+                        ),
                         selectedItem = selectedFinancialYear, label = "Financial Year:"
                     ) {
                         selectedFinancialYear = it
-                        viewModel.getProfitLoss(selectedFinancialYear)
+                        selectedMonth = null
+                        viewModel.getProfitLoss(selectedFinancialYear, selectedMonth)
                     }
                 }
                 item {
@@ -102,16 +120,23 @@ fun ProfitLossReport(
                             horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-
-                            Text(text = "Total PNL : ", style = MaterialTheme.typography.labelLarge)
-                            if (viewModel.state.value.profitLoss.isNotEmpty()) {
-                                Text(
-                                    text = viewModel.state.value.profitLoss.map { it.pnl }
-                                        .reduce { acc, d -> acc + d }.formatCurrency(),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = Green
-                                )
+                            var totalPnlLabel = "PNL : "
+                            selectedMonth?.let {
+                                totalPnlLabel = "PNL ($it) : "
                             }
+                            Text(text = totalPnlLabel, style = MaterialTheme.typography.labelLarge)
+                            var totalPnl = 0.0
+                            if (viewModel.state.value.profitLoss.isNotEmpty()) {
+                                totalPnl = viewModel.state.value.profitLoss.map { it.pnl }
+                                    .reduce { acc, d -> acc + d }
+
+
+                            }
+                            Text(
+                                text = totalPnl.formatCurrency(),
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = totalPnl.getColor()
+                            )
                         }
                     }
                 }
@@ -151,6 +176,32 @@ fun ProfitLossReport(
                             viewModel.sortPnl(sortOrder)
                         })
                     }
+                }
+                item {
+                    LazyRow {
+                        val months = Month.entries
+                        items(months) {
+                            Box(modifier = Modifier.padding(8.dp)) {
+                                ElevatedFilterChip(
+                                    selected = it == selectedMonth,
+                                    onClick = {
+                                        if (it == selectedMonth) {
+                                            selectedMonth = null
+                                            viewModel.getProfitLoss(selectedFinancialYear, null)
+                                        } else {
+                                            selectedMonth = it
+                                            viewModel.onEvent(StocksEvent.FilterMonth(it))
+                                        }
+                                    },
+                                    label = {
+                                        Text(text = it.toString())
+                                    })
+                            }
+                        }
+                    }
+                }
+                item {
+                    Divider()
                 }
                 items(viewModel.state.value.profitLoss) {
                     Row(

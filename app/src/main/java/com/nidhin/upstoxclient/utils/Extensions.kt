@@ -1,5 +1,6 @@
 package com.nidhin.upstoxclient.utils
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
@@ -57,6 +58,8 @@ fun Date.getCurrentFinancialYear():String{
 fun Double.getColor():Color{
     return if(this>0)
         Green
+    else if(this == 0.0)
+        Color.DarkGray
     else
         Color.Red
 }
@@ -94,4 +97,10 @@ inline fun <T : Comparable<T>> List<StockDetails>.sortByOrder(
     } else {
         this.sortedByDescending(selector)
     }
+}
+
+fun String.toDate():Date{
+    val formatter = SimpleDateFormat("dd-MM-yyyy")
+    return formatter.parse(this)
+
 }

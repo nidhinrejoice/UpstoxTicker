@@ -13,6 +13,7 @@ import com.nidhin.upstoxclient.feature_portfolio.data.ScriptProfitLoss
 import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.Article
 import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateGeminiResponse
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.Month
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
@@ -209,7 +210,8 @@ class PortfolioViewModel @Inject constructor(
         val aiContent: String? = null,
         val latestNews: MutableList<Article> = mutableListOf(),
         var newsLoading: Boolean = false,
-        var userState: UserState = UserState.Anonymous
+        var userState: UserState = UserState.Anonymous,
+        var financialYear : String = "2024-2025"
     )
 
     enum class UserState {
@@ -259,24 +261,31 @@ class PortfolioViewModel @Inject constructor(
                 _state.value =
                     state.value.copy(isOrderSectionVisible = !state.value.isOrderSectionVisible)
             }
+
+            is StocksEvent.FilterMonth -> {
+                viewModelScope.launch {
+                    getProfitLoss(financialYear = state.value.financialYear, event.month)
+                }
+            }
         }
     }
 
-    fun getProfitLoss(financialYear: String = "2324") {
+    fun getProfitLoss(financialYear: String = state.value.financialYear, filterMonth: Month?) {
         job?.cancel()
         job =
             viewModelScope.launch {
 //            _eventFlow.emit(UiEvent.ShowPortfolio)
                 try {
+                    state.value.financialYear = financialYear
                     _state.value.showProfitLoss = false
-                    portfolioUsecases.getProfitLoss(financialYear).collectLatest {
+                    portfolioUsecases.getProfitLoss(financialYear,filterMonth).collectLatest {
                         _state.value = state.value.copy(
                             profitLoss = it,
                             showProfitLoss = true
                         )
                     }
                 } catch (ex: Exception) {
-                    isRefreshing.value = false
+                    _state.value.showProfitLoss = true
                     _state.value = state.value.copy(
                         showProfitLoss = true
                     )

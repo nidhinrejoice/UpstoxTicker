@@ -2,6 +2,7 @@ package com.nidhin.upstoxclient.feature_portfolio.data
 
 import com.google.gson.Gson
 import com.nidhin.upstoxclient.api.ApiManager
+import com.nidhin.upstoxclient.feature_portfolio.data.models.getprofitlossreport.Data
 import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.Ohlc
 import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.NewsApiResponse
 import com.nidhin.upstoxclient.feature_portfolio.domain.IPortfolioRepository
@@ -25,15 +26,6 @@ class PortfolioRepository @Inject constructor(
         val response = apiManager.generateAuthToken(code)
         response.let {
             sharedPrefsHelper.put("access_token", response.access_token)
-//            val currentHour = Calendar.getInstance().time.hours
-//            val currentMins = Calendar.getInstance().time.minutes
-//            if (currentHour > 3 || (currentHour == 3 && currentMins > 30)){
-//                sharedPrefsHelper.put(
-//                    "authenticated_date",
-//                    Calendar.getInstance().time.formattedDate()
-//                )
-//            }
-//            sharedPrefsHelper.put("user_authenticated_at", Calendar.getInstance().timeInMillis)
         }
         return true
     }
@@ -90,6 +82,16 @@ class PortfolioRepository @Inject constructor(
         }
     }
 
+    override suspend fun getProfitLossRawData(financialYear: String): List<Data> {
+        val accessToken = sharedPrefsHelper["access_token", ""]
+        val metaData = apiManager.getTradeMetaData(accessToken, financialYear)
+        var maxPageSize = metaData.data.trades_count
+        maxPageSize += (100 - (metaData.data.trades_count % 100))
+        val response =
+            apiManager.getProfitLoss(accessToken, financialYear, maxPageSize)
+        return response.data.filter { it.scrip_name.isNotEmpty() }
+
+    }
 
     override suspend fun getProfitLossReport(financialYear: String): Flow<List<ScriptProfitLoss>> {
         val accessToken = sharedPrefsHelper["access_token", ""]

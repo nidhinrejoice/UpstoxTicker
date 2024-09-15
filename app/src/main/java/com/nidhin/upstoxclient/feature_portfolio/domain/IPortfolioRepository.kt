@@ -1,7 +1,7 @@
 package com.nidhin.upstoxclient.feature_portfolio.domain
 
-import com.google.ai.client.generativeai.type.GenerateContentResponse
 import com.nidhin.upstoxclient.feature_portfolio.data.ScriptProfitLoss
+import com.nidhin.upstoxclient.feature_portfolio.data.models.getprofitlossreport.Data
 import com.nidhin.upstoxclient.feature_portfolio.data.models.marketohlc.Ohlc
 import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.NewsApiResponse
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
@@ -16,4 +16,5 @@ interface IPortfolioRepository {
 
     suspend fun getProfitLossReport(financialYear: String): Flow<List<ScriptProfitLoss>>
     suspend fun getNews(key: String, page: Int): Flow<NewsApiResponse>
+    suspend fun getProfitLossRawData(financialYear: String): List<Data>
 }
