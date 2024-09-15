@@ -1,6 +1,8 @@
 package com.nidhin.upstoxclient.utils
 
 import androidx.compose.ui.graphics.Color
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
+import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.ui.theme.Green
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -82,4 +84,14 @@ fun String.convertIsoSecondFormatToDefaultDate(format: String): String {
 fun Date.convertDate(format: String): String {
     val sdf = SimpleDateFormat(format)
     return sdf.format(this)
+}
+inline fun <T : Comparable<T>> List<StockDetails>.sortByOrder(
+    orderType: OrderType,
+    crossinline selector: (StockDetails) -> T
+): List<StockDetails> {
+    return if (orderType == OrderType.Ascending) {
+        this.sortedBy(selector)
+    } else {
+        this.sortedByDescending(selector)
+    }
 }

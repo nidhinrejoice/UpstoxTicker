@@ -3,18 +3,60 @@ package com.nidhin.upstoxclient.feature_portfolio.domain
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
+import com.nidhin.upstoxclient.utils.sortByOrder
+
 
 class SortHoldingsList {
+    interface SortingStrategy {
+        fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails>
 
 
-    private inline fun <T : Comparable<T>> List<StockDetails>.sortByOrder(
-        stockOrder: StockOrder,
-        crossinline selector: (StockDetails) -> T
-    ): List<StockDetails> {
-        return if (stockOrder.orderType == OrderType.Ascending) {
-            this.sortedBy(selector)
-        } else {
-            this.sortedByDescending(selector)
+    }
+    object PriceSortingStrategy : SortingStrategy {
+        override fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails> {
+            return stocks.sortByOrder(orderType) { it.last_price }
+        }
+    }
+
+    object PnlSortingStrategy : SortingStrategy {
+        override fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails> {
+            return stocks.sortByOrder(orderType) { it.current_amount-it.invested_amount }
+        }
+    }
+
+    object InvestedAmountSortingStrategy : SortingStrategy {
+        override fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails> {
+            return stocks.sortByOrder(orderType) { it.invested_amount }
+        }
+    }
+
+    object CurrentAmountSortingStrategy : SortingStrategy {
+        override fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails> {
+            return stocks.sortByOrder(orderType) { it.current_amount }
+        }
+    }
+
+    object DailyPercentSortingStrategy : SortingStrategy {
+        override fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails> {
+            return stocks.sortByOrder(orderType) { it.day_change_percentage }
+        }
+    }
+
+    object DailyGainSortingStrategy : SortingStrategy {
+        override fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails> {
+            return stocks.sortByOrder(orderType) { it.day_change }
+        }
+    }
+
+    object CompanyNameSortingStrategy : SortingStrategy {
+        override fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails> {
+            return stocks.sortByOrder(orderType) { it.company_name }
+        }
+    }
+
+    object PercentGainSortingStrategy : SortingStrategy {
+        override fun sort(stocks: List<StockDetails>, orderType: OrderType): List<StockDetails> {
+            return stocks.sortByOrder(orderType) { it.percentage_gain }
         }
     }
 
@@ -22,17 +64,19 @@ class SortHoldingsList {
         stockOrder: StockOrder,
         stocks: List<StockDetails>
     ): List<StockDetails> {
-        return when (stockOrder) {
-            is StockOrder.Price -> stocks.sortByOrder(stockOrder) { it.last_price }
-            is StockOrder.Pnl -> stocks.sortByOrder(stockOrder) { it.current_amount - it.invested_amount }
-            is StockOrder.InvestedAmt -> stocks.sortByOrder(stockOrder) { it.invested_amount }
-            is StockOrder.CurrentAmt -> stocks.sortByOrder(stockOrder) { it.current_amount }
-            is StockOrder.DailyPerc -> stocks.sortByOrder(stockOrder) { it.day_change_percentage }
-            is StockOrder.DailyPnl -> stocks.sortByOrder(stockOrder) { it.day_change }
-            is StockOrder.Name -> stocks.sortByOrder(stockOrder) { it.company_name }
-            is StockOrder.Perc -> stocks.sortByOrder(stockOrder) { it.percentage_gain }
+
+        val strategy =  when (stockOrder) {
+            is StockOrder.Price -> PriceSortingStrategy
+            is StockOrder.Pnl -> PnlSortingStrategy
+            is StockOrder.InvestedAmt -> InvestedAmountSortingStrategy
+            is StockOrder.CurrentAmt -> CurrentAmountSortingStrategy
+            is StockOrder.DailyPerc -> DailyPercentSortingStrategy
+            is StockOrder.DailyPnl -> DailyGainSortingStrategy
+            is StockOrder.Name -> CompanyNameSortingStrategy
+            is StockOrder.Perc -> PercentGainSortingStrategy
 
         }
+        return strategy.sort(stocks,stockOrder.orderType)
 
     }
 }
