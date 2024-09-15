@@ -1,6 +1,6 @@
 package com.nidhin.upstoxclient.feature_portfolio.domain.models
 
-sealed class StockOrder(val orderType: OrderType, public var label: String) {
+sealed class StockOrder(val orderType: OrderType, var label: String) {
 
     class Name(orderType: OrderType) : StockOrder(orderType, "Name")
     class Price(orderType: OrderType) :StockOrder(orderType, "Price")
