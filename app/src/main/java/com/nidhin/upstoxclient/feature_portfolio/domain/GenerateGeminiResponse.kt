@@ -9,6 +9,6 @@ class GenerateGeminiResponse @Inject constructor(
 ) {
 
     suspend operator fun invoke(prompt: String): Flow<GenerateContentResponse> {
-        return geminiRepository.getLatestNewsFromGemini(prompt)
+        return geminiRepository.getGeminiResponse(prompt)
     }
 }

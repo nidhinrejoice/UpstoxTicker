@@ -185,6 +185,14 @@ fun StockInfo(
                                                     color = if (negativeGain) Color.Red else Green,
                                                     text = "$gainString${it.total_gain.formatCurrency()} (${it.percentage_gain.twoDecimalPlaces()}%)"
                                                 )
+                                                it.marketCap?.let { it1 ->
+                                                    Text(
+                                                        text = "$it1 Cap",
+                                                        modifier = Modifier
+                                                            .padding(4.dp),
+                                                        style = MaterialTheme.typography.labelMedium
+                                                    )
+                                                }
                                             }
                                             Box(
                                                 modifier = Modifier.weight(0.1f),

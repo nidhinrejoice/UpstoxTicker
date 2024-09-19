@@ -39,7 +39,7 @@ class PortfolioRepository @Inject constructor(
                     close_price = it.close_price,
                     company_name = it.company_name,
                     day_change = it.day_change,
-                    day_change_percentage = it.day_change_percentage,
+                    day_change_percentage = (it.last_price / it.close_price - 1) * 100,
                     exchange = it.exchange,
                     isin = it.isin,
                     last_price = it.last_price,

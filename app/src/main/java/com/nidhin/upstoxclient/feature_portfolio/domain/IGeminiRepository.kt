@@ -4,6 +4,7 @@ import com.google.ai.client.generativeai.type.GenerateContentResponse
 import kotlinx.coroutines.flow.Flow
 
 interface IGeminiRepository {
-    suspend fun getLatestNewsFromGemini(companyName: String): Flow<GenerateContentResponse>
+    suspend fun getGeminiResponseStream(prompt: String): Flow<GenerateContentResponse>
+    suspend fun getGeminiResponse(prompt: String): Flow<GenerateContentResponse>
 
 }

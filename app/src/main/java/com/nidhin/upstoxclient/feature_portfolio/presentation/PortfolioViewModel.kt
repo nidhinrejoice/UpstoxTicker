@@ -12,6 +12,7 @@ import com.google.ai.client.generativeai.type.asTextOrNull
 import com.nidhin.upstoxclient.feature_portfolio.data.ScriptProfitLoss
 import com.nidhin.upstoxclient.feature_portfolio.data.models.newsapiresponse.Article
 import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateGeminiResponse
+import com.nidhin.upstoxclient.feature_portfolio.domain.GetGeminiPortfolioAnalysis
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.Month
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
@@ -30,7 +31,8 @@ import javax.inject.Inject
 class PortfolioViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val portfolioUsecases: PortfolioUsecases,
-    private val generateGeminiResponse: GenerateGeminiResponse
+    private val generateGeminiResponse: GenerateGeminiResponse,
+    private val getGeminiPortfolioAnalysis: GetGeminiPortfolioAnalysis
 ) : ViewModel() {
 
     var isRefreshing = mutableStateOf(false)
@@ -96,11 +98,11 @@ class PortfolioViewModel @Inject constructor(
                 try {
 
                     _state.value = _state.value.copy(
-                        stocks = portfolioUsecases.getLongTermHoldings(state.value.stockOrder),
-                        stockOrder = state.value.stockOrder
+                        stocks = portfolioUsecases.getLongTermHoldings()
                     )
                     isRefreshing.value = false
                     _eventFlow.emit(UiEvent.ShowPortfolio)
+                    sortHoldings(state.value.stockOrder)
                 } catch (ex: Exception) {
                     isRefreshing.value = false
 //                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(
@@ -116,9 +118,6 @@ class PortfolioViewModel @Inject constructor(
                     } else {
                         _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
                     }
-//                } else {
-//                    _eventFlow.emit(UiEvent.ShowToast(ex.message.toString()))
-//                }
 
                 }
             }
@@ -185,6 +184,29 @@ class PortfolioViewModel @Inject constructor(
         }
     }
 
+
+    fun getGeminiAnalysis() {
+        job?.cancel()
+        job = viewModelScope.launch {
+            try {
+                _state.value = state.value.copy(
+                    newsLoading = true
+                )
+                getGeminiPortfolioAnalysis(state.value.stocks).collect { contentRes ->
+                    _state.value = state.value.copy(
+                        stocks = contentRes,
+                        newsLoading = false
+                    )
+                }
+            } catch (ex: Exception) {
+                _state.value = state.value.copy(
+                    newsLoading = false
+                )
+                _eventFlow.emit(UiEvent.ShowToast("Something went wrong"))
+            }
+        }
+    }
+
     private fun sortHoldings(
         stockOrder: StockOrder = StockOrder.Name(OrderType.Ascending)
     ) {
@@ -211,7 +233,7 @@ class PortfolioViewModel @Inject constructor(
         val latestNews: MutableList<Article> = mutableListOf(),
         var newsLoading: Boolean = false,
         var userState: UserState = UserState.Anonymous,
-        var financialYear : String = "2024-2025"
+        var financialYear: String = "2024-2025"
     )
 
     enum class UserState {
@@ -274,18 +296,16 @@ class PortfolioViewModel @Inject constructor(
         job?.cancel()
         job =
             viewModelScope.launch {
-//            _eventFlow.emit(UiEvent.ShowPortfolio)
                 try {
                     state.value.financialYear = financialYear
                     _state.value.showProfitLoss = false
-                    portfolioUsecases.getProfitLoss(financialYear,filterMonth).collectLatest {
+                    portfolioUsecases.getProfitLoss(financialYear, filterMonth).collectLatest {
                         _state.value = state.value.copy(
                             profitLoss = it,
                             showProfitLoss = true
                         )
                     }
                 } catch (ex: Exception) {
-                    _state.value.showProfitLoss = true
                     _state.value = state.value.copy(
                         showProfitLoss = true
                     )
@@ -295,33 +315,15 @@ class PortfolioViewModel @Inject constructor(
             }
     }
 
-    fun sortPnl(sortOrder: StockOrder) {
-        if (sortOrder is StockOrder.Name) {
-            if (sortOrder.orderType is OrderType.Descending)
-                _state.value = state.value.copy(
-                    profitLoss = state.value.profitLoss.sortedByDescending {
-                        it.scriptName
-                    }
+    fun sortProfitLossReport(sortOrder: StockOrder) {
+        viewModelScope.launch {
+
+            _state.value = _state.value.copy(
+                profitLoss = portfolioUsecases.sortProfitLossReport(
+                    sortOrder,
+                    state.value.profitLoss
                 )
-            else
-                _state.value = state.value.copy(
-                    profitLoss = state.value.profitLoss.sortedBy {
-                        it.scriptName
-                    }
-                )
-        } else {
-            if (sortOrder.orderType is OrderType.Descending)
-                _state.value = state.value.copy(
-                    profitLoss = state.value.profitLoss.sortedByDescending {
-                        it.pnl
-                    }
-                )
-            else
-                _state.value = state.value.copy(
-                    profitLoss = state.value.profitLoss.sortedBy {
-                        it.pnl
-                    }
-                )
+            )
         }
     }
 

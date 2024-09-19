@@ -2,6 +2,7 @@ package com.nidhin.upstoxclient.feature_portfolio.di
 
 import com.nidhin.upstoxclient.feature_portfolio.data.GeminiRepository
 import com.nidhin.upstoxclient.feature_portfolio.domain.GenerateGeminiResponse
+import com.nidhin.upstoxclient.feature_portfolio.domain.GetGeminiPortfolioAnalysis
 import com.nidhin.upstoxclient.feature_portfolio.domain.IGeminiRepository
 import dagger.Module
 import dagger.Provides
@@ -24,5 +25,10 @@ open class GeminiModule {
     @Provides
     open fun provideGenerateGeminiResponse(geminiRepository: IGeminiRepository): GenerateGeminiResponse {
         return  GenerateGeminiResponse(geminiRepository)
+    }
+    @Singleton
+    @Provides
+    open fun provideGeminiPortfolioAnalysis(geminiRepository: IGeminiRepository): GetGeminiPortfolioAnalysis {
+        return  GetGeminiPortfolioAnalysis(geminiRepository)
     }
 }

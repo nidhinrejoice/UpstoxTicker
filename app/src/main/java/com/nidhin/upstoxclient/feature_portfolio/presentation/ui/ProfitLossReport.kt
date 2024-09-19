@@ -44,7 +44,6 @@ import com.nidhin.upstoxclient.feature_portfolio.domain.models.OrderType
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StocksEvent
 import com.nidhin.upstoxclient.feature_portfolio.presentation.PortfolioViewModel
-import com.nidhin.upstoxclient.ui.theme.Green
 import com.nidhin.upstoxclient.utils.formatCurrency
 import com.nidhin.upstoxclient.utils.getColor
 import com.nidhin.upstoxclient.utils.getCurrentFinancialYear
@@ -165,7 +164,7 @@ fun ProfitLossReport(
                             else
                                 OrderType.Descending
                             sortOrder = StockOrder.Name(orderType)
-                            viewModel.sortPnl(sortOrder)
+                            viewModel.sortProfitLossReport(sortOrder)
                         })
                         Text(text = "PnL$arrowPnlOrder", modifier = Modifier.clickable {
                             orderType = if (orderType is OrderType.Descending)
@@ -173,7 +172,7 @@ fun ProfitLossReport(
                             else
                                 OrderType.Descending
                             sortOrder = StockOrder.Pnl(orderType)
-                            viewModel.sortPnl(sortOrder)
+                            viewModel.sortProfitLossReport(sortOrder)
                         })
                     }
                 }

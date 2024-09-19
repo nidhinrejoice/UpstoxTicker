@@ -11,6 +11,7 @@ import com.nidhin.upstoxclient.feature_portfolio.domain.GetProfitLoss
 import com.nidhin.upstoxclient.feature_portfolio.domain.IPortfolioRepository
 import com.nidhin.upstoxclient.feature_portfolio.domain.PortfolioUsecases
 import com.nidhin.upstoxclient.feature_portfolio.domain.SortHoldingsList
+import com.nidhin.upstoxclient.feature_portfolio.domain.SortProfitLossReport
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,7 +39,8 @@ open class PortfolioModule {
             SortHoldingsList(),
             GetMarketOHLC(portfolioRepository),
             GetProfitLoss(portfolioRepository),
-            GetLatestNews(portfolioRepository)
+            GetLatestNews(portfolioRepository),
+            SortProfitLossReport()
         )
     }
 }

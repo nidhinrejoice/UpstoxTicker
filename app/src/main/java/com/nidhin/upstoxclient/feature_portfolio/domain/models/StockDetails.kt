@@ -23,5 +23,6 @@ data class StockDetails(
     var total_gain: Double,
     var instrument_token : String,
     var ohlc: Ohlc? = null,
-    var portfolio_share : Double
+    var portfolio_share : Double,
+    var marketCap : String? = null
 )
