@@ -20,16 +20,21 @@ import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockOrder
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StocksEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class PortfolioViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+//    savedStateHandle: SavedStateHandle,
     private val portfolioUsecases: PortfolioUsecases,
     private val generateGeminiResponse: GenerateGeminiResponse,
     private val getGeminiPortfolioAnalysis: GetGeminiPortfolioAnalysis
@@ -51,14 +56,16 @@ class PortfolioViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>(replay = 3)
     val eventFlow = _eventFlow.asSharedFlow()
 
-//    private var _stockList = mutableStateListOf<StockDetails>()
-//    val stockList: List<StockDetails> = _stockList
-
-//    var showLoginPopup = mutableStateOf(false)
-//        private set
+    private val _getGeminiAnalysis = MutableSharedFlow<Unit>()
 
     init {
         viewModelScope.launch {
+            _getGeminiAnalysis
+                .debounce(500)
+                .onEach {
+                    getGeminiAnalysis()
+                }
+                .launchIn(this)
             if (portfolioUsecases.checkUserAuthentication()) {
                 getUserHoldings()
             } else {
@@ -70,8 +77,13 @@ class PortfolioViewModel @Inject constructor(
         }
     }
 
+    fun onGetGeminiAnalysis() {
+        viewModelScope.launch {
+            _getGeminiAnalysis.emit(Unit)
+        }
+    }
+
     fun generateAccessToken(code: String) {
-        job?.cancel()
         job =
             viewModelScope.launch {
                 try {
@@ -89,11 +101,18 @@ class PortfolioViewModel @Inject constructor(
             }
     }
 
+    var cancelJobs = {
+        try {
+            job?.cancel()
+        } catch (_: Exception) {
+
+        }
+    }
+
     fun getUserHoldings() {
-        isRefreshing.value = true
-        job?.cancel()
         job =
             viewModelScope.launch {
+                isRefreshing.value = true
 //            _eventFlow.emit(UiEvent.ShowPortfolio)
                 try {
 
@@ -129,16 +148,16 @@ class PortfolioViewModel @Inject constructor(
         symbol: String,
         exchange: String
     ) {
-//        job?.cancel()
+        cancelJobs()
         job = viewModelScope.launch {
             isMarketDataLoading.value = true
             try {
-                portfolioUsecases.getMarketOHLC(instrumentToken, symbol, exchange).collectLatest {
+                portfolioUsecases.getMarketOHLC(instrumentToken, symbol, exchange).collectLatest { ohlc ->
                     _state.value = state.value.copy(
                         selectedStock = state.value.stocks.find { it.instrument_token == instrumentToken },
                         aiContent = ""
                     )
-                    _state.value.selectedStock?.ohlc = it
+                    _state.value.selectedStock?.ohlc = ohlc
                     isMarketDataLoading.value = false
                 }
             } catch (ex: Exception) {
@@ -164,7 +183,8 @@ class PortfolioViewModel @Inject constructor(
     }
 
     fun geminiPrompt(prompt: String) {
-        job?.cancel()
+
+        cancelJobs()
         job = viewModelScope.launch {
             _state.value = state.value.copy(
                 aiContent = ""
@@ -185,8 +205,8 @@ class PortfolioViewModel @Inject constructor(
     }
 
 
-    fun getGeminiAnalysis() {
-        job?.cancel()
+    private fun getGeminiAnalysis() {
+        cancelJobs()
         job = viewModelScope.launch {
             try {
                 _state.value = state.value.copy(
@@ -226,7 +246,7 @@ class PortfolioViewModel @Inject constructor(
         val stocks: List<StockDetails> = emptyList(),
         val profitLoss: List<ScriptProfitLoss> = emptyList(),
         val selectedStock: StockDetails? = null,
-        val stockOrder: StockOrder = StockOrder.DailyPerc(OrderType.Descending),
+        val stockOrder: StockOrder = StockOrder.DailyPnl(OrderType.Descending),
         val isOrderSectionVisible: Boolean = false,
         var showProfitLoss: Boolean = false,
         val aiContent: String? = null,
@@ -244,9 +264,9 @@ class PortfolioViewModel @Inject constructor(
     sealed class UiEvent {
         data class ShowToast(val message: String) : UiEvent()
 
-        object UpstoxLogin : UiEvent()
-        object ShowPortfolio : UiEvent()
-        object ProfitLoss : UiEvent()
+        data object UpstoxLogin : UiEvent()
+        data object ShowPortfolio : UiEvent()
+        data object ProfitLoss : UiEvent()
 //        object StockDetails : UiEvent()
     }
 
@@ -293,7 +313,7 @@ class PortfolioViewModel @Inject constructor(
     }
 
     fun getProfitLoss(financialYear: String = state.value.financialYear, filterMonth: Month?) {
-        job?.cancel()
+        cancelJobs()
         job =
             viewModelScope.launch {
                 try {
@@ -330,7 +350,7 @@ class PortfolioViewModel @Inject constructor(
     private var totalArticles = 0
 
     fun getLatestNews(page: Int, key: String) {
-        job?.cancel()
+        cancelJobs()
         job = viewModelScope.launch {
             if (totalArticles > 9 && totalArticles / 10 < page) {
                 _eventFlow.emit(UiEvent.ShowToast("No more articles found"))

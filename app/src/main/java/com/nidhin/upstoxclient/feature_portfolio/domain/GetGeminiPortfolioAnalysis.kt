@@ -2,6 +2,7 @@ package com.nidhin.upstoxclient.feature_portfolio.domain
 
 import com.google.ai.client.generativeai.type.asTextOrNull
 import com.nidhin.upstoxclient.feature_portfolio.domain.models.StockDetails
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOf
@@ -12,11 +13,12 @@ class GetGeminiPortfolioAnalysis @Inject constructor(
     private val geminiRepository: IGeminiRepository
 ) {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     suspend operator fun invoke(list : List<StockDetails>): Flow<List<StockDetails>> {
         if(list.find { it.marketCap!=null } != null){
             return flowOf(list)
         }
-        var stringBuilder = StringBuilder().apply {
+        val stringBuilder = StringBuilder().apply {
             list.forEach{
                 if(this.isNotEmpty())
                     append(",")

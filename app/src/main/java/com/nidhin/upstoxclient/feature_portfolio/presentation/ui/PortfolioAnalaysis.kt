@@ -12,12 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,17 +48,15 @@ fun PortfolioAnalysis(
 ) {
 
     LaunchedEffect(key1 = false) {
-        viewModel.getGeminiAnalysis()
+        viewModel.onGetGeminiAnalysis()
     }
     Scaffold (
         topBar = {
-            Row(modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
-                .padding(8.dp)
-                .clickable {
-                    navController.popBackStack()
-                }) {
-                Text(text = "< Portfolio Analysis", style = MaterialTheme.typography.titleLarge)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Rounded.ArrowBack, contentDescription = "Go Back")
+                }
+                Text(text = "Portfolio Analysis")
             }
         },
         content = { padding->

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,14 +44,10 @@ import com.nidhin.upstoxclient.utils.twoDecimalPlaces
 @Composable
 fun PortfolioScreen(
     navController: NavController,
-    viewModel: PortfolioViewModel = hiltViewModel()
+    viewModel: PortfolioViewModel,
+    paddingValues: PaddingValues
 ) {
     val state = viewModel.state.value
-//    LaunchedEffect(key1 = null) {
-//
-//        viewModel.getUserHoldings()
-//    }
-
 
     if (state.stocks.isNotEmpty()) {
         val currentAmount =
@@ -82,16 +79,17 @@ fun PortfolioScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp)
+                    .padding(bottom = paddingValues.calculateBottomPadding())
+                    .padding(horizontal = 12.dp)
             ) {
                 item {
                     Row(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().padding(top = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "My Holdings",
+                            text = "Portfolio",
                             modifier = Modifier.padding(vertical = 8.dp),
                             style = MaterialTheme.typography.titleLarge
                         )

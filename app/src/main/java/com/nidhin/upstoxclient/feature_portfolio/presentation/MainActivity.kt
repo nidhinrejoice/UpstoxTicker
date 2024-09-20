@@ -1,22 +1,18 @@
 package com.nidhin.upstoxclient.feature_portfolio.presentation
 
-import android.content.Intent
-import android.graphics.drawable.Icon
 import android.os.Bundle
-import android.widget.Space
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Analytics
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.List
 import androidx.compose.material.icons.rounded.Report
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -27,11 +23,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,6 +68,7 @@ class MainActivity : ComponentActivity() {
         toast = Toast(this)
         setContent {
             val navController = rememberNavController()
+            var bottomBarState = rememberSaveable { (mutableStateOf(true)) }
 
             UpstoxClientTheme {
                 // A surface container using the 'background' color from the theme
@@ -80,7 +78,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     LaunchedEffect(key1 = null) {
                         lifecycleScope.launch {
-                            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            repeatOnLifecycle(Lifecycle.State.CREATED) {
                                 viewModel.eventFlow.collect { event ->
                                     when (event) {
                                         is PortfolioViewModel.UiEvent.ShowToast -> {
@@ -89,6 +87,7 @@ class MainActivity : ComponentActivity() {
 
                                         is PortfolioViewModel.UiEvent.ShowPortfolio -> {
 
+                                            bottomBarState.value = true
                                             navController.navigate(
                                                 Screen.Portfolio.route
                                             ) {
@@ -122,10 +121,13 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-//                    val userState by remember { mutableStateOf( viewModel.state.value.userState) }
+
                     Scaffold(
                         bottomBar = {
-                            BottomNavigationBar(navController = navController)
+                            BottomNavigationBar(
+                                navController = navController,
+                                bottomBarState = bottomBarState
+                            )
                         }, content = { padding ->
                             NavHost(
                                 navController = navController,
@@ -133,16 +135,22 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 composable(route = Screen.UpstoxLogin.route) {
 
+                                    bottomBarState.value = false
                                     UpstoxLogin {
                                         viewModel.generateAccessToken(it)
                                     }
                                 }
                                 composable(route = Screen.Portfolio.route) {
-
-                                    PortfolioScreen(navController = navController)
+                                    bottomBarState.value = true
+                                    PortfolioScreen(
+                                        navController = navController,
+                                        viewModel,
+                                        padding
+                                    )
                                 }
                                 composable(route = Screen.StockAllocation.route) {
 
+                                    bottomBarState.value = false
                                     StockAllocationsScreen(navController = navController)
                                 }
                                 composable(
@@ -172,6 +180,7 @@ class MainActivity : ComponentActivity() {
                                     val exchange = it.arguments?.getString("exchange") ?: ""
                                     val companyName = it.arguments?.getString("company_name") ?: ""
 
+                                    bottomBarState.value = false
                                     LaunchedEffect(key1 = false) {
                                         viewModel.getMarketOHLC(
                                             instrumentToken,
@@ -179,9 +188,6 @@ class MainActivity : ComponentActivity() {
                                             exchange
                                         )
                                     }
-                                    Spacer(
-                                        modifier = Modifier.padding(padding)
-                                    )
                                     StockInfo(navController, viewModel.state.value, viewModel)
                                 }
                                 composable(route = Screen.ProfitLossReport.route) {
@@ -203,6 +209,7 @@ class MainActivity : ComponentActivity() {
                                             defaultValue = ""
                                         }
                                     )) {
+                                    bottomBarState.value = false
                                     val key = it.arguments?.getString("key") ?: ""
                                     NewsListing(navController = navController, viewModel, key)
                                 }
@@ -247,47 +254,56 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val title: 
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavHostController) {
+fun BottomNavigationBar(navController: NavHostController, bottomBarState: MutableState<Boolean>) {
     var selectedItem by remember { mutableIntStateOf(0) }
 
     val items = listOf(
         BottomNavItem.Portfolio,
         BottomNavItem.Reports,
-        BottomNavItem.Analysis
+//        BottomNavItem.Analysis
     )
-
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimary
-    ) {
-        items.forEachIndexed { index, item ->
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.title
+    AnimatedVisibility(
+        visible = bottomBarState.value,
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY = { it }),
+        content = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                items.forEachIndexed { index, item ->
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = item.title
+                            )
+                        },
+                        label = { Text(item.title) },
+                        selected = selectedItem == index,
+                        onClick = {
+                            selectedItem = index
+                            if(item is BottomNavItem.Portfolio){
+                                navController.navigate(
+                                    item.route
+                                ) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = true
+                                    }
+                                    launchSingleTop = true
+                                }
+                            }else{
+                                navController.navigate(item.route)
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                            unselectedIconColor = Color.Gray
+                        )
                     )
-                },
-                label = { Text(item.title) },
-                selected = selectedItem == index,
-                onClick = {
-                    selectedItem = index
-                    navController.navigate(
-                        Screen.Portfolio.route
-                    ) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            inclusive = true
-                        }
-                        launchSingleTop = true
-                    }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                    unselectedIconColor = Color.Gray
-                )
-            )
-        }
-    }
+                }
+            }
+        })
 }
 
 sealed class ListViewItem {
