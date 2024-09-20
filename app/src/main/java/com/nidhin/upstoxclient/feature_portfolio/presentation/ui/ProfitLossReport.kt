@@ -140,6 +140,30 @@ fun ProfitLossReport(
                     }
                 }
                 item {
+                    LazyRow {
+                        val months = Month.entries
+                        items(months) {
+                            Box(modifier = Modifier.padding(8.dp)) {
+                                ElevatedFilterChip(
+                                    selected = it == selectedMonth,
+                                    onClick = {
+                                        if (it == selectedMonth) {
+                                            selectedMonth = null
+                                            viewModel.getProfitLoss(selectedFinancialYear, null)
+                                        } else {
+                                            selectedMonth = it
+                                            viewModel.onEvent(StocksEvent.FilterMonth(it))
+                                        }
+                                    },
+                                    label = {
+                                        Text(text = it.toString())
+                                    })
+                            }
+                        }
+                    }
+                }
+
+                item {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -174,29 +198,6 @@ fun ProfitLossReport(
                             sortOrder = StockOrder.Pnl(orderType)
                             viewModel.sortProfitLossReport(sortOrder)
                         })
-                    }
-                }
-                item {
-                    LazyRow {
-                        val months = Month.entries
-                        items(months) {
-                            Box(modifier = Modifier.padding(8.dp)) {
-                                ElevatedFilterChip(
-                                    selected = it == selectedMonth,
-                                    onClick = {
-                                        if (it == selectedMonth) {
-                                            selectedMonth = null
-                                            viewModel.getProfitLoss(selectedFinancialYear, null)
-                                        } else {
-                                            selectedMonth = it
-                                            viewModel.onEvent(StocksEvent.FilterMonth(it))
-                                        }
-                                    },
-                                    label = {
-                                        Text(text = it.toString())
-                                    })
-                            }
-                        }
                     }
                 }
                 item {
